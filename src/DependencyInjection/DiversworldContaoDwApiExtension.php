@@ -12,14 +12,14 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\DependencyInjection;
+namespace Diversworld\ContaoDwApiBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-class DiversworldContaoExampleModuleExtension extends Extension
+class DiversworldContaoDwApiExtension extends Extension
 {
     public function getAlias(): string
     {

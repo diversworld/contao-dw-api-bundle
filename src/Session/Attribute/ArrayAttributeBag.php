@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\Session\Attribute;
+namespace Diversworld\ContaoDwApiBundle\Session\Attribute;
 
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
 

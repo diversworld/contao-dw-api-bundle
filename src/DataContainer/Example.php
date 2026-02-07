@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\DataContainer;
+namespace Diversworld\ContaoDwApiBundle\DataContainer;
 
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\Framework\ContaoFramework;

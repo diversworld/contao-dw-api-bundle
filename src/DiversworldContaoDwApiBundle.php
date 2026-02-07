@@ -12,14 +12,19 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle;
+namespace Diversworld\ContaoDwApiBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class DiversworldContaoExampleModuleBundle extends Bundle
+class DiversworldContaoDwApiBundle extends Bundle
 {
     public function getPath(): string
     {
         return \dirname(__DIR__);
+    }
+
+    public function getContainerExtension(): ?\Symfony\Component\DependencyInjection\Extension\ExtensionInterface
+    {
+        return new \Diversworld\ContaoDwApiBundle\DependencyInjection\DiversworldContaoDwApiExtension();
     }
 }

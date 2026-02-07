@@ -23,7 +23,8 @@
     },
     "require": {
         "php": "^8.2",
-        "contao/core-bundle": "^5.3"
+        "contao/core-bundle": "^5.3",
+        "diversworld/contao-diveclub-bundle": "dev-main"
     },
     "require-dev": {
         "contao/easy-coding-standard": "^6.13",

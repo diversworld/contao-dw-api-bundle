@@ -12,9 +12,9 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\ContaoManager;
+namespace Diversworld\ContaoDwApiBundle\ContaoManager;
 
-use Diversworld\ContaoExampleModuleBundle\DiversworldContaoExampleModuleBundle;
+use Diversworld\ContaoDwApiBundle\DiversworldContaoDwApiBundle;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\BundlePluginInterface;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
@@ -29,7 +29,7 @@ class Plugin implements BundlePluginInterface, RoutingPluginInterface
     public function getBundles(ParserInterface $parser): array
     {
         return [
-            BundleConfig::create(DiversworldContaoExampleModuleBundle::class)
+            BundleConfig::create(DiversworldContaoDwApiBundle::class)
                 ->setLoadAfter([ContaoCoreBundle::class]),
         ];
     }

@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @link https://github.com/diversworld/contao-example-module-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\Model;
+namespace Diversworld\ContaoDwApiBundle\Model;
 
 use Contao\Model;
 

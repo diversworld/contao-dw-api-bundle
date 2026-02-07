@@ -6,24 +6,22 @@ services:
         public: false           # Allows optimizing the container by removing unused services; this also means
                                 # fetching services directly from the container via $container->get() won't work.
                                 # The best practice is to be explicit about your dependencies anyway.
-        bind:
-            #$projectDir: '%kernel.project_dir%'
 
-    Diversworld\ContaoExampleModuleBundle\:
+    Diversworld\ContaoDwApiBundle\:
         resource: ../src/
         exclude: ../src/{DependencyInjection,Model,Session}
 
-      # Add a session bag
-    diversworld.contao_example_module_bundle.session.factory:
-        class: Diversworld\ContaoExampleModuleBundle\Session\SessionFactory
+    # Add a session bag
+    diversworld.contao_dw_api_bundle.session.factory:
+        class: Diversworld\ContaoDwApiBundle\Session\SessionFactory
         decorates: session.factory
         arguments:
-            - '@diversworld.contao_example_module_bundle.session.factory.inner'
-            - '@diversworld.contao_example_module_bundle.session.attribute.array_attribute_bag'
+            - '@diversworld.contao_dw_api_bundle.session.factory.inner'
+            - '@diversworld.contao_dw_api_bundle.session.attribute.array_attribute_bag'
 
-    diversworld.contao_example_module_bundle.session.attribute.array_attribute_bag:
-        class: Diversworld\ContaoExampleModuleBundle\Session\Attribute\ArrayAttributeBag
+    diversworld.contao_dw_api_bundle.session.attribute.array_attribute_bag:
+        class: Diversworld\ContaoDwApiBundle\Session\Attribute\ArrayAttributeBag
         arguments:
-            - _diversworld_contao_example_module_attributes
+            - _diversworld_contao_dw_api_attributes
         calls:
-            - [ setName, [ diversworld_contao_example_module ] ]
+            - [ setName, [ diversworld_contao_dw_api ] ]
