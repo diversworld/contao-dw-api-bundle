@@ -6,7 +6,14 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App.
 
 ## Features
 
-- API Endpunkte für den Diveclub Manager (Reservierungen, Events)
+- API Endpunkte für den Diveclub Manager:
+    - **Events:** `/api/events`
+    - **Reservierungen:** `/api/reservations` (GET, POST für neue Buchungen)
+    - **Equipment:** `/api/equipment`
+    - **Tauchflaschen:** `/api/tanks`
+    - **Atemregler:** `/api/regulators`
+    - **TÜV-Termine:** `/api/tank-checks`
+    - **Schüler:** `/api/students`
 - JSON Antworten für iOS Integration
 
 ## Installation
