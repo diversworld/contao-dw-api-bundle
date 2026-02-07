@@ -40,11 +40,11 @@ class ReservationController extends AbstractController
         }
 
         $data = $model->row();
-        
+
         // Items laden
         $items = \Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel::findBy('pid', $model->id);
         $data['items'] = [];
-        
+
         if ($items) {
             foreach ($items as $item) {
                 $data['items'][] = $item->row();
@@ -58,14 +58,14 @@ class ReservationController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         $content = json_decode($request->getContent(), true);
-        
+
         if (!$content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
         $userId = (int)($content['member_id'] ?? 0);
         $reservedFor = (int)($content['reservedFor'] ?? $userId);
-        
+
         if (!$userId) {
             return new JsonResponse(['error' => 'Missing member_id'], 400);
         }
@@ -79,7 +79,7 @@ class ReservationController extends AbstractController
         $reservation->reservation_status = 'reserved';
         $reservation->published = '1';
         $reservation->asset_type = $content['asset_type'] ?? 'multiple';
-        
+
         if (!$reservation->save()) {
             return new JsonResponse(['error' => 'Could not save reservation'], 500);
         }

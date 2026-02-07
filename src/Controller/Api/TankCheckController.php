@@ -26,7 +26,7 @@ class TankCheckController extends AbstractController
         $data = [];
         foreach ($models as $model) {
             $item = $model->row();
-            
+
             // Verknüpftes Event laden für genaues Datum
             if ($model->checkId) {
                 $event = CalendarEventsModel::findByPk($model->checkId);
@@ -34,7 +34,7 @@ class TankCheckController extends AbstractController
                     $item['event_date'] = $event->startDate;
                 }
             }
-            
+
             $data[] = $item;
         }
 
@@ -51,11 +51,11 @@ class TankCheckController extends AbstractController
         }
 
         $data = $model->row();
-        
+
         // Artikel laden
         $articles = DcCheckArticlesModel::findBy('pid', $model->id);
         $data['articles'] = [];
-        
+
         if ($articles) {
             foreach ($articles as $article) {
                 $data['articles'][] = $article->row();
