@@ -20,7 +20,8 @@ class MeController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
 
     #[Route('', name: 'me', methods: ['GET'])]
@@ -33,7 +34,7 @@ class MeController extends AbstractController
         }
 
         return new JsonResponse([
-            'id' => (int) $user->id,
+            'id' => (int)$user->id,
             'username' => $user->username,
             'firstname' => $user->firstname,
             'lastname' => $user->lastname,
@@ -46,6 +47,7 @@ class MeController extends AbstractController
             'dateOfBirth' => $user->dateOfBirth,
         ]);
     }
+
     #[Route('', name: 'update', methods: ['PATCH'])]
     public function update(Request $request): JsonResponse
     {
@@ -61,7 +63,7 @@ class MeController extends AbstractController
         $fields = ['firstname', 'lastname', 'email', 'street', 'postal', 'city', 'phone', 'mobile', 'dateOfBirth'];
         foreach ($fields as $field) {
             if (isset($data[$field])) {
-                $user->$field = ($field === 'dateOfBirth') ? (int) $data[$field] : (string) $data[$field];
+                $user->$field = ($field === 'dateOfBirth') ? (int)$data[$field] : (string)$data[$field];
             }
         }
 
@@ -74,7 +76,8 @@ class MeController extends AbstractController
     public function changePassword(
         Request $request,
         UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse {
+    ): JsonResponse
+    {
 
         $frontendUser = $this->security->getUser();
 

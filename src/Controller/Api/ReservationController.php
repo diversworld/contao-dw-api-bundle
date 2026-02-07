@@ -21,7 +21,8 @@ class ReservationController extends AbstractController
     public function __construct(
         private readonly Security $security,
         private readonly Connection $db
-    ) {
+    )
+    {
     }
     #[Route('', name: 'api_reservations_list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -34,7 +35,7 @@ class ReservationController extends AbstractController
 
         $models = DcReservationModel::findBy(
             ['member_id=?'],
-            [(int) $user->id]
+            [(int)$user->id]
         );
 
         if (null === $models) {
@@ -88,9 +89,9 @@ class ReservationController extends AbstractController
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
-        $userId = (int) $user->id;
-        $reservedFor = (int) ($content['reservedFor'] ?? $userId);
-        $eventId = (int) ($content['event_id'] ?? 0);
+        $userId = (int)$user->id;
+        $reservedFor = (int)($content['reservedFor'] ?? $userId);
+        $eventId = (int)($content['event_id'] ?? 0);
 
         $reservation = new DcReservationModel();
         $reservation->tstamp = time();
@@ -102,7 +103,7 @@ class ReservationController extends AbstractController
             'reserved_at' => (string)time(),
             'reservation_status' => 'reserved',
             'published' => '1',
-            'asset_type' => (string) ($content['asset_type'] ?? 'multiple'),
+            'asset_type' => (string)($content['asset_type'] ?? 'multiple'),
         ]);
 
         if (!$reservation->save()) {

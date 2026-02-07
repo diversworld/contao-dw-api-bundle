@@ -20,7 +20,8 @@ class CourseController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
 
     #[Route('', name: 'api_courses_list', methods: ['GET'])]
@@ -65,8 +66,8 @@ class CourseController extends AbstractController
             return new JsonResponse(['error' => 'Invalid JSON or missing course_id'], 400);
         }
 
-        $courseId = (int) $content['course_id'];
-        $eventId = (int) ($content['event_id'] ?? 0);
+        $courseId = (int)$content['course_id'];
+        $eventId = (int)($content['event_id'] ?? 0);
 
         // Find student record for the member
         $student = DcStudentsModel::findOneBy('memberId', $user->id);

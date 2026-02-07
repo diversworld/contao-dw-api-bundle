@@ -21,7 +21,8 @@ class TankCheckController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
 
     #[Route('', name: 'api_tank_checks_list', methods: ['GET'])]
@@ -86,7 +87,7 @@ class TankCheckController extends AbstractController
             return new JsonResponse(['error' => 'Invalid JSON or missing fields'], 400);
         }
 
-        $proposalId = (int) $content['proposal_id'];
+        $proposalId = (int)$content['proposal_id'];
         $proposal = DcCheckProposalModel::findByPk($proposalId);
 
         if (!$proposal) {
@@ -121,9 +122,9 @@ class TankCheckController extends AbstractController
             $order->manufacturer = $item['manufacturer'] ?? '';
             $order->bazNumber = $item['bazNumber'] ?? '';
             $order->size = $item['size'] ?? '';
-            $order->o2clean = (bool) ($item['o2clean'] ?? false);
+            $order->o2clean = (bool)($item['o2clean'] ?? false);
             $order->status = 'ordered';
-            
+
             // Articles as blob/serialized array
             if (isset($item['articles']) && is_array($item['articles'])) {
                 $order->selectedArticles = serialize($item['articles']);
@@ -135,7 +136,7 @@ class TankCheckController extends AbstractController
                 foreach ($item['articles'] as $articleId) {
                     $art = DcCheckArticlesModel::findByPk($articleId);
                     if ($art) {
-                        $itemPrice += (float) $art->price;
+                        $itemPrice += (float)$art->price;
                     }
                 }
             }

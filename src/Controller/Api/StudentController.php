@@ -17,7 +17,8 @@ class StudentController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
     #[Route('', name: 'api_students_list', methods: ['GET'])]
     public function list(): JsonResponse

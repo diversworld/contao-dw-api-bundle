@@ -21,8 +21,9 @@ class LoginController extends AbstractController
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly RequestStack $requestStack
-    ) {
+        private readonly RequestStack          $requestStack
+    )
+    {
     }
 
     #[Route('', name: 'login_check', methods: ['POST'])]
@@ -74,12 +75,12 @@ class LoginController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'member' => [
-                'id' => (int) $user->id,
+                'id' => (int)$user->id,
                 'username' => $user->username,
                 'firstname' => $user->firstname,
                 'lastname' => $user->lastname,
                 'email' => $user->email,
-                'dateOfBirth' => (int) $user->dateOfBirth,
+                'dateOfBirth' => (int)$user->dateOfBirth,
             ]
         ]);
     }

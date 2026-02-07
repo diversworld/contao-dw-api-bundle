@@ -21,7 +21,8 @@ class ProgressController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
 
     /**
@@ -75,15 +76,15 @@ class ProgressController extends AbstractController
         $user = $this->security->getUser();
         // Here we might want to check for a specific instructor role if available,
         // but for now ROLE_MEMBER is required by IsGranted.
-        
+
         // In this bundle, an instructor is often a member with specific properties
         // or just assigned to a course.
-        
+
         // Let's find all course enrollments where the logged in user is the instructor
         // Note: DcDiveCourseModel has an 'instructor' field which is probably a member ID or student ID.
         // If it's a member ID:
         $courses = DcDiveCourseModel::findBy('instructor', $user->id);
-        
+
         if (null === $courses) {
             return new JsonResponse([]);
         }
@@ -95,7 +96,7 @@ class ProgressController extends AbstractController
                 foreach ($enrollments as $enrollment) {
                     $student = DcStudentsModel::findByPk($enrollment->pid);
                     $studentData = $student ? $student->row() : null;
-                    
+
                     $exercises = DcStudentExercisesModel::findBy('pid', $enrollment->id);
                     $exerciseData = [];
                     if ($exercises) {
@@ -138,17 +139,17 @@ class ProgressController extends AbstractController
 
         // Only allow updating status, dateCompleted, instructor, notes
         if (isset($content['status'])) {
-            $exercise->status = (string) $content['status'];
+            $exercise->status = (string)$content['status'];
         }
         if (isset($content['dateCompleted'])) {
-            $exercise->dateCompleted = (int) $content['dateCompleted'];
+            $exercise->dateCompleted = (int)$content['dateCompleted'];
         }
         if (isset($content['notes'])) {
-            $exercise->notes = (string) $content['notes'];
+            $exercise->notes = (string)$content['notes'];
         }
-        
+
         // Automatically set current user as instructor if not provided
-        $exercise->instructor = (int) ($content['instructor'] ?? $user->id);
+        $exercise->instructor = (int)($content['instructor'] ?? $user->id);
         $exercise->tstamp = time();
 
         if (!$exercise->save()) {

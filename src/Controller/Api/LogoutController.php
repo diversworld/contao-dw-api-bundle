@@ -17,7 +17,8 @@ class LogoutController extends AbstractController
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
         private readonly RequestStack $requestStack
-    ) {
+    )
+    {
     }
 
     #[Route('', name: 'logout', methods: ['POST'])]
