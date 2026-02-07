@@ -6,12 +6,19 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/students', name: 'api_students', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[IsGranted('ROLE_MEMBER')]
 class StudentController extends AbstractController
 {
+    public function __construct(
+        private readonly Security $security
+    ) {
+    }
     #[Route('', name: 'api_students_list', methods: ['GET'])]
     public function list(): JsonResponse
     {

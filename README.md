@@ -30,6 +30,20 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `POST /api/reservations`: Neue Reservierung erstellen.
     - Erwartet JSON mit `member_id`, optional `reservedFor`, `asset_type` und einer Liste von `items`.
 
+### Kurse
+
+- `GET /api/courses`: Liste aller verfügbaren Kurse.
+- `GET /api/courses/{id}`: Details zu einem bestimmten Kurs.
+- `POST /api/courses/enroll`: Anmeldung zu einem Kurs.
+    - Erwartet JSON mit `course_id` und optional `event_id`.
+
+### Kursfortschritt
+
+- `GET /api/progress`: Kursfortschritt des aktuell angemeldeten Schülers.
+- `GET /api/progress/instructor`: (Instruktoren) Liste der Schüler und deren Fortschritte.
+- `PATCH /api/progress/{exerciseId}`: (Instruktoren) Übung als abgeschlossen markieren oder Notizen hinzufügen.
+    - Erwartet JSON mit `status`, `dateCompleted` (Timestamp) und optional `notes`.
+
 ### Leihausrüstung
 
 - `GET /api/equipment`: Liste der allgemeinen Ausrüstung.
@@ -45,6 +59,21 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/students/{id}`: Schülerdetails.
 - `GET /api/tank-checks`: Liste der TÜV-Prüfvorschläge.
 - `GET /api/tank-checks/{id}`: Details zum Prüfvorschlag inkl. verknüpfter Artikel.
+- `POST /api/tank-checks/book`: Buchung einer TÜV-Prüfung für eine oder mehrere Flaschen.
+    - Erwartet JSON mit `proposal_id` und einer Liste von `items` (Flaschendaten und gewählte Artikel-IDs).
+
+### Authentifizierung
+
+- `POST /api/login`: Login für Frontend-Benutzer.
+    - Erwartet JSON mit `username` und `password`.
+    - Gibt bei Erfolg Benutzerdaten zurück.
+- `POST /api/logout`: Logout für Frontend-Benutzer.
+    - Beendet die aktuelle Session.
+- `GET /api/me`: Aktuelle Benutzerdaten abrufen.
+    - Erfordert eine aktive Session.
+- `PATCH /api/me`: Eigene Benutzerdaten aktualisieren.
+    - Erwartet JSON mit den zu ändernden Feldern (z.B. `firstname`, `lastname`, `email`, etc.).
+    - Erfordert eine aktive Session.
 
 ## Installation
 

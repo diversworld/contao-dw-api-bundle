@@ -4,19 +4,38 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationModel;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/reservations', name: 'api_reservations', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[IsGranted('ROLE_MEMBER')]
 class ReservationController extends AbstractController
 {
+    public function __construct(
+        private readonly Security $security,
+        private readonly Connection $db
+    ) {
+    }
     #[Route('', name: 'api_reservations_list', methods: ['GET'])]
-    public function list(Request $request): JsonResponse
+    public function list(): JsonResponse
     {
-        $models = DcReservationModel::findAll();
+        $user = $this->security->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
+        $models = DcReservationModel::findBy(
+            ['member_id=?'],
+            [(int) $user->id]
+        );
 
         if (null === $models) {
             return new JsonResponse([]);
@@ -42,7 +61,7 @@ class ReservationController extends AbstractController
         $data = $model->row();
 
         // Items laden
-        $items = \Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel::findBy('pid', $model->id);
+        $items = DcReservationItemsModel::findBy('pid', $model->id);
         $data['items'] = [];
 
         if ($items) {
@@ -57,28 +76,34 @@ class ReservationController extends AbstractController
     #[Route('', name: 'api_reservations_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
+        $user = $this->security->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
         $content = json_decode($request->getContent(), true);
 
         if (!$content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
-        $userId = (int)($content['member_id'] ?? 0);
-        $reservedFor = (int)($content['reservedFor'] ?? $userId);
-
-        if (!$userId) {
-            return new JsonResponse(['error' => 'Missing member_id'], 400);
-        }
+        $userId = (int) $user->id;
+        $reservedFor = (int) ($content['reservedFor'] ?? $userId);
+        $eventId = (int) ($content['event_id'] ?? 0);
 
         $reservation = new DcReservationModel();
         $reservation->tstamp = time();
-        $reservation->member_id = $userId;
-        $reservation->reservedFor = $reservedFor;
-        $reservation->title = 'API-' . date('Y-m-d-H-i') . '-' . $userId;
-        $reservation->reserved_at = (string)time();
-        $reservation->reservation_status = 'reserved';
-        $reservation->published = '1';
-        $reservation->asset_type = $content['asset_type'] ?? 'multiple';
+        $reservation->setRow([
+            'member_id' => $userId,
+            'reservedFor' => $reservedFor,
+            'event_id' => $eventId,
+            'title' => 'API-' . date('Y-m-d-H-i') . '-' . $userId,
+            'reserved_at' => (string)time(),
+            'reservation_status' => 'reserved',
+            'published' => '1',
+            'asset_type' => (string) ($content['asset_type'] ?? 'multiple'),
+        ]);
 
         if (!$reservation->save()) {
             return new JsonResponse(['error' => 'Could not save reservation'], 500);
@@ -86,9 +111,8 @@ class ReservationController extends AbstractController
 
         // Items verarbeiten
         if (isset($content['items']) && is_array($content['items'])) {
-            $db = \Contao\System::getContainer()->get('database_connection');
             foreach ($content['items'] as $itemData) {
-                $db->insert('tl_dc_reservation_items', [
+                $this->db->insert('tl_dc_reservation_items', [
                     'pid' => $reservation->id,
                     'tstamp' => time(),
                     'item_id' => (int)($itemData['item_id'] ?? 0),
