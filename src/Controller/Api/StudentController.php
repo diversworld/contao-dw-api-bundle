@@ -20,6 +20,7 @@ class StudentController extends AbstractController
     )
     {
     }
+
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {

@@ -19,7 +19,8 @@ class InstructorController extends AbstractController
 {
     public function __construct(
         private readonly Security $security
-    ) {
+    )
+    {
     }
 
     #[Route('/approve/{id}', name: 'approve', methods: ['PATCH'], requirements: ['id' => '\d+'])]

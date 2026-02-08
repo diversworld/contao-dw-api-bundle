@@ -41,7 +41,7 @@ class EventController extends AbstractController
         }
 
         $data = $model->row();
-        $data['currentParticipants'] = (int) DcCourseStudentsModel::countBy(
+        $data['currentParticipants'] = (int)DcCourseStudentsModel::countBy(
             ['event_id=?', 'status=?'],
             [$model->id, 'registered']
         );

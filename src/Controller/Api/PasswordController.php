@@ -26,7 +26,7 @@ class PasswordController extends AbstractController
 
     #[Route('', name: 'change', methods: ['PATCH'])]
     public function change(
-        Request $request,
+        Request                     $request,
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {

@@ -49,7 +49,8 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 ### Kursfortschritt
 
 - `GET /api/progress`: Kursfortschritt des aktuell angemeldeten Schülers.
-- `GET /api/progress/instructor`: (Instruktoren) Liste der Schüler und deren Fortschritte für alle betreuten Kurse/Events.
+- `GET /api/progress/instructor`: (Instruktoren) Liste der Schüler und deren Fortschritte für alle betreuten
+  Kurse/Events.
 - `PATCH /api/progress/{exerciseId}`: (Instruktoren) Übung als abgeschlossen markieren oder Notizen hinzufügen.
     - Erwartet JSON mit `status`, `dateCompleted` (Timestamp) und optional `notes`.
 
@@ -75,7 +76,7 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 - `POST /api/login`: Login für Frontend-Benutzer.
     - Erwartet JSON mit `username` und `password`.
-    - Gibt bei Erfolg Benutzerdaten inkl. `role` zurück.
+  - Gibt bei Erfolg Benutzerdaten inkl. `role` zurück.
 - `POST /api/logout`: Logout für Frontend-Benutzer.
     - Beendet die aktuelle Session.
 - `GET /api/me`: Aktuelle Benutzerdaten inkl. `role` abrufen.

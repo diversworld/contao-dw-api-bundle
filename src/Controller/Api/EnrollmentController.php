@@ -28,7 +28,7 @@ class EnrollmentController extends AbstractController
     public function list(): JsonResponse
     {
         $user = $this->security->getUser();
-        
+
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
@@ -40,7 +40,7 @@ class EnrollmentController extends AbstractController
         }
 
         $enrollments = DcCourseStudentsModel::findBy('pid', $student->id);
-        
+
         $result = [];
         if ($enrollments !== null) {
             /** @var DcCourseStudentsModel $enrollment */
@@ -49,11 +49,11 @@ class EnrollmentController extends AbstractController
 
                 if ($event) {
                     $result[] = [
-                        'id' => (int) $enrollment->id,
+                        'id' => (int)$enrollment->id,
                         'title' => html_entity_decode($event->title),
-                        'event_id' => (int) $event->id,
+                        'event_id' => (int)$event->id,
                         'reservation_status' => $enrollment->status,
-                        'dateStart' => (int) $event->dateStart,
+                        'dateStart' => (int)$event->dateStart,
                     ];
                 }
             }
