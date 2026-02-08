@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
+use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api/events', name: 'api_events', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/events', name: 'api_events_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class EventController extends AbstractController
 {
-    #[Route('', name: 'api_events_list', methods: ['GET'])]
-    public function list(Request $request): JsonResponse
+    #[Route('', name: 'list', methods: ['GET'])]
+    public function list(): JsonResponse
     {
         $models = DcCourseEventModel::findAll();
 
@@ -30,7 +31,7 @@ class EventController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_events_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcCourseEventModel::findByPk($id);
@@ -39,6 +40,12 @@ class EventController extends AbstractController
             return new JsonResponse(['error' => 'Event not found'], 404);
         }
 
-        return new JsonResponse($model->row());
+        $data = $model->row();
+        $data['currentParticipants'] = (int) DcCourseStudentsModel::countBy(
+            ['event_id=?', 'status=?'],
+            [$model->id, 'registered']
+        );
+
+        return new JsonResponse($data);
     }
 }

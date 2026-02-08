@@ -10,10 +10,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api/tanks', name: 'api_tanks', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/tanks', name: 'api_tanks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class TankController extends AbstractController
 {
-    #[Route('', name: 'api_tanks_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $models = DcTanksModel::findAll();
@@ -30,7 +30,7 @@ class TankController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_tanks_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcTanksModel::findByPk($id);

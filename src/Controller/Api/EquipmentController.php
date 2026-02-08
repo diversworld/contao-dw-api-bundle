@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/equipment', name: 'api_equipment', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/equipment', name: 'api_equipment_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
 class EquipmentController extends AbstractController
 {
-    #[Route('', name: 'api_equipment_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $models = DcEquipmentModel::findAll();
@@ -32,7 +32,7 @@ class EquipmentController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_equipment_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcEquipmentModel::findByPk($id);

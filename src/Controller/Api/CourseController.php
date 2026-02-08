@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
-use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
+use Contao\StringUtil;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
+use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -14,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/courses', name: 'api_courses', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/courses', name: 'api_courses_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
 class CourseController extends AbstractController
 {
@@ -24,10 +25,10 @@ class CourseController extends AbstractController
     {
     }
 
-    #[Route('', name: 'api_courses_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $models = DcDiveCourseModel::findAll(['column' => 'published', 'value' => '1']);
+        $models = DcDiveCourseModel::findPublished();
 
         if (null === $models) {
             return new JsonResponse([]);
@@ -35,13 +36,17 @@ class CourseController extends AbstractController
 
         $data = [];
         foreach ($models as $model) {
-            $data[] = $model->row();
+            $row = $model->row();
+            if (isset($row['singleSRC']) && $row['singleSRC']) {
+                $row['singleSRC'] = StringUtil::binToUuid($row['singleSRC']);
+            }
+            $data[] = $row;
         }
 
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_courses_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcDiveCourseModel::findByPk($id);
@@ -50,10 +55,15 @@ class CourseController extends AbstractController
             return new JsonResponse(['error' => 'Course not found'], 404);
         }
 
-        return new JsonResponse($model->row());
+        $row = $model->row();
+        if (isset($row['singleSRC']) && $row['singleSRC']) {
+            $row['singleSRC'] = StringUtil::binToUuid($row['singleSRC']);
+        }
+
+        return new JsonResponse($row);
     }
 
-    #[Route('/enroll', name: 'api_courses_enroll', methods: ['POST'])]
+    #[Route('/enroll', name: 'enroll', methods: ['POST'])]
     public function enroll(Request $request): JsonResponse
     {
         $user = $this->security->getUser();
@@ -71,12 +81,22 @@ class CourseController extends AbstractController
 
         // Find student record for the member
         $student = DcStudentsModel::findOneBy('memberId', $user->id);
+
         if (!$student) {
-            return new JsonResponse(['error' => 'No student profile found for this user'], 404);
+            $student = new DcStudentsModel();
+            $student->tstamp = time();
+            $student->memberId = $user->id;
+            $student->firstname = $user->firstname;
+            $student->lastname = $user->lastname;
+            $student->email = $user->email;
+
+            if (!$student->save()) {
+                return new JsonResponse(['error' => 'Could not create student profile'], 500);
+            }
         }
 
         // Check if already enrolled
-        $existing = DcCourseStudentsModel::findBy(['pid=?', 'course_id=?'], [$student->id, $courseId]);
+        $existing = DcCourseStudentsModel::findOneBy(['pid=?', 'course_id=?'], [$student->id, $courseId]);
         if ($existing) {
             return new JsonResponse(['error' => 'Already enrolled in this course'], 400);
         }
@@ -88,7 +108,9 @@ class CourseController extends AbstractController
         $enrollment->event_id = $eventId;
         $enrollment->status = 'registered';
         $enrollment->registered_on = time();
-        $enrollment->published = '1';
+        $enrollment->payed = false;
+        $enrollment->brevet = false;
+        $enrollment->published = true;
 
         if (!$enrollment->save()) {
             return new JsonResponse(['error' => 'Could not save enrollment'], 500);

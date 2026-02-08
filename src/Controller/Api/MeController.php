@@ -45,7 +45,36 @@ class MeController extends AbstractController
             'phone' => $user->phone,
             'mobile' => $user->mobile,
             'dateOfBirth' => $user->dateOfBirth,
+            'role' => $this->getMemberRole($user),
         ]);
+    }
+
+    private function getMemberRole($user): string
+    {
+        if (!$user instanceof \Contao\FrontendUser) {
+            return 'member';
+        }
+
+        $groups = \Contao\StringUtil::deserialize($user->groups, true);
+        $db = \Contao\Database::getInstance();
+        $configResult = $db->prepare("SELECT instructor_groups FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
+
+        $instructorGroups = [];
+        if ($configResult->numRows > 0) {
+            $instructorGroups = \Contao\StringUtil::deserialize($configResult->instructor_groups, true);
+        }
+
+        if (empty($instructorGroups)) {
+            $instructorGroups = ['2', '3'];
+        }
+
+        foreach ($instructorGroups as $groupId) {
+            if (in_array((string)$groupId, $groups, true)) {
+                return 'instructor';
+            }
+        }
+
+        return 'member';
     }
 
     #[Route('', name: 'update', methods: ['PATCH'])]

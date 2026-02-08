@@ -9,10 +9,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api/regulators', name: 'api_regulators', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/regulators', name: 'api_regulators_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class RegulatorController extends AbstractController
 {
-    #[Route('', name: 'api_regulators_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $models = DcRegulatorsModel::findAll();
@@ -29,7 +29,7 @@ class RegulatorController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_regulators_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcRegulatorsModel::findByPk($id);

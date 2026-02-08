@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/students', name: 'api_students', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/students', name: 'api_students_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
 class StudentController extends AbstractController
 {
@@ -20,7 +20,7 @@ class StudentController extends AbstractController
     )
     {
     }
-    #[Route('', name: 'api_students_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $models = DcStudentsModel::findAll();
@@ -37,7 +37,7 @@ class StudentController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_students_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcStudentsModel::findByPk($id);

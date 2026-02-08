@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/tank-checks', name: 'api_tank_checks', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/tank-checks', name: 'api_tank_checks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class TankCheckController extends AbstractController
 {
     public function __construct(
@@ -25,7 +25,7 @@ class TankCheckController extends AbstractController
     {
     }
 
-    #[Route('', name: 'api_tank_checks_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $models = DcCheckProposalModel::findBy(['published=?'], [1], ['order' => 'proposalDate DESC']);
@@ -52,7 +52,7 @@ class TankCheckController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_tank_checks_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcCheckProposalModel::findByPk($id);
@@ -76,7 +76,7 @@ class TankCheckController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/book', name: 'api_tank_checks_book', methods: ['POST'])]
+    #[Route('/book', name: 'book', methods: ['POST'])]
     #[IsGranted('ROLE_MEMBER')]
     public function book(Request $request): JsonResponse
     {

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/reservations', name: 'api_reservations', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/reservations', name: 'api_reservations_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
 class ReservationController extends AbstractController
 {
@@ -24,7 +24,7 @@ class ReservationController extends AbstractController
     )
     {
     }
-    #[Route('', name: 'api_reservations_list', methods: ['GET'])]
+    #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $user = $this->security->getUser();
@@ -50,7 +50,7 @@ class ReservationController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/{id}', name: 'api_reservations_detail', methods: ['GET'])]
+    #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
         $model = DcReservationModel::findByPk($id);
@@ -74,7 +74,7 @@ class ReservationController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('', name: 'api_reservations_create', methods: ['POST'])]
+    #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
         $user = $this->security->getUser();
