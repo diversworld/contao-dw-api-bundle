@@ -38,11 +38,18 @@ class TankCheckController extends AbstractController
         foreach ($models as $model) {
             $item = $model->row();
 
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'proposalDate', 'start', 'stop'] as $field) {
+                if (isset($item[$field]) && $item[$field] !== '') {
+                    $item[$field] = (int)$item[$field];
+                }
+            }
+
             // Verknüpftes Event laden für genaues Datum
             if ($model->checkId) {
                 $event = CalendarEventsModel::findByPk($model->checkId);
                 if ($event) {
-                    $item['event_date'] = $event->startDate;
+                    $item['event_date'] = (int)$event->startDate;
                 }
             }
 
@@ -62,6 +69,13 @@ class TankCheckController extends AbstractController
         }
 
         $data = $model->row();
+
+        // Convert date fields to timestamp
+        foreach (['tstamp', 'proposalDate', 'start', 'stop'] as $field) {
+            if (isset($data[$field]) && $data[$field] !== '') {
+                $data[$field] = (int)$data[$field];
+            }
+        }
 
         // Artikel laden
         $articles = DcCheckArticlesModel::findBy('pid', $model->id);

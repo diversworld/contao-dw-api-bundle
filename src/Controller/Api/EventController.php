@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
+use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventScheduleModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
+use Diversworld\ContaoDiveclubBundle\Model\DcCourseModulesModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +27,19 @@ class EventController extends AbstractController
 
         $data = [];
         foreach ($models as $model) {
-            $data[] = $model->row();
+            $row = $model->row();
+            if (isset($row['singleSRC']) && $row['singleSRC']) {
+                $row['singleSRC'] = StringUtil::binToUuid($row['singleSRC']);
+            }
+
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'startDate', 'endDate', 'dateStart', 'dateEnd', 'start', 'stop'] as $field) {
+                if (isset($row[$field]) && $row[$field] !== '') {
+                    $row[$field] = (int)$row[$field];
+                }
+            }
+
+            $data[] = $row;
         }
 
         return new JsonResponse($data);
@@ -41,10 +55,61 @@ class EventController extends AbstractController
         }
 
         $data = $model->row();
+        if (isset($data['singleSRC']) && $data['singleSRC']) {
+            $data['singleSRC'] = StringUtil::binToUuid($data['singleSRC']);
+        }
+
+        // Convert date fields to timestamp
+        foreach (['tstamp', 'startDate', 'endDate', 'dateStart', 'dateEnd', 'start', 'stop'] as $field) {
+            if (isset($data[$field]) && $data[$field] !== '') {
+                $data[$field] = (int)$data[$field];
+            }
+        }
+
         $data['currentParticipants'] = (int)DcCourseStudentsModel::countBy(
             ['event_id=?', 'status=?'],
             [$model->id, 'registered']
         );
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/{id}/schedule', name: 'schedule', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function schedule(int $id): JsonResponse
+    {
+        $event = DcCourseEventModel::findByPk($id);
+
+        if (null === $event) {
+            return new JsonResponse(['error' => 'Event not found'], 404);
+        }
+
+        $schedule = DcCourseEventScheduleModel::findBy('pid', $id, ['order' => 'planned_at ASC']);
+
+        if (null === $schedule) {
+            return new JsonResponse([]);
+        }
+
+        $data = [];
+        foreach ($schedule as $item) {
+            $row = $item->row();
+
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'planned_at', 'start', 'stop'] as $field) {
+                if (isset($row[$field]) && $row[$field] !== '') {
+                    $row[$field] = (int)$row[$field];
+                }
+            }
+
+            // Add module title
+            if ($item->module_id) {
+                $module = DcCourseModulesModel::findByPk($item->module_id);
+                if ($module) {
+                    $row['module_title'] = html_entity_decode($module->title);
+                }
+            }
+
+            $data[] = $row;
+        }
 
         return new JsonResponse($data);
     }

@@ -45,7 +45,13 @@ class ReservationController extends AbstractController
 
         $data = [];
         foreach ($models as $model) {
-            $data[] = $model->row();
+            $row = $model->row();
+            foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+                if (isset($row[$f]) && $row[$f] !== '') {
+                    $row[$f] = (int)$row[$f];
+                }
+            }
+            $data[] = $row;
         }
 
         return new JsonResponse($data);
@@ -61,6 +67,11 @@ class ReservationController extends AbstractController
         }
 
         $data = $model->row();
+        foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+            if (isset($data[$f]) && $data[$f] !== '') {
+                $data[$f] = (int)$data[$f];
+            }
+        }
 
         // Items laden
         $items = DcReservationItemsModel::findBy('pid', $model->id);
@@ -68,7 +79,13 @@ class ReservationController extends AbstractController
 
         if ($items) {
             foreach ($items as $item) {
-                $data['items'][] = $item->row();
+                $row = $item->row();
+                foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+                    if (isset($row[$f]) && $row[$f] !== '') {
+                        $row[$f] = (int)$row[$f];
+                    }
+                }
+                $data['items'][] = $row;
             }
         }
 

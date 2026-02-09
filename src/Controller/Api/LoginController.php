@@ -81,6 +81,7 @@ class LoginController extends AbstractController
                 'lastname' => $user->lastname,
                 'email' => $user->email,
                 'dateOfBirth' => (int)$user->dateOfBirth,
+                'memberGroups' => array_map('intval', \Contao\StringUtil::deserialize($user->groups, true)),
                 'role' => $this->getMemberRole($user),
             ]
         ]);

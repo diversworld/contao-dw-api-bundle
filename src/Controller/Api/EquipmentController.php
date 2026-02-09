@@ -26,7 +26,16 @@ class EquipmentController extends AbstractController
 
         $data = [];
         foreach ($models as $model) {
-            $data[] = $model->row();
+            $row = $model->row();
+
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'buyDate', 'start', 'stop'] as $field) {
+                if (isset($row[$field]) && $row[$field] !== '') {
+                    $row[$field] = (int)$row[$field];
+                }
+            }
+
+            $data[] = $row;
         }
 
         return new JsonResponse($data);
@@ -41,6 +50,15 @@ class EquipmentController extends AbstractController
             return new JsonResponse(['error' => 'Equipment not found'], 404);
         }
 
-        return new JsonResponse($model->row());
+        $row = $model->row();
+
+        // Convert date fields to timestamp
+        foreach (['tstamp', 'buyDate', 'start', 'stop'] as $field) {
+            if (isset($row[$field]) && $row[$field] !== '') {
+                $row[$field] = (int)$row[$field];
+            }
+        }
+
+        return new JsonResponse($row);
     }
 }

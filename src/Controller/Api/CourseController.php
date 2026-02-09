@@ -40,6 +40,14 @@ class CourseController extends AbstractController
             if (isset($row['singleSRC']) && $row['singleSRC']) {
                 $row['singleSRC'] = StringUtil::binToUuid($row['singleSRC']);
             }
+
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'start', 'stop'] as $field) {
+                if (isset($row[$field]) && $row[$field] !== '') {
+                    $row[$field] = (int)$row[$field];
+                }
+            }
+
             $data[] = $row;
         }
 
@@ -58,6 +66,13 @@ class CourseController extends AbstractController
         $row = $model->row();
         if (isset($row['singleSRC']) && $row['singleSRC']) {
             $row['singleSRC'] = StringUtil::binToUuid($row['singleSRC']);
+        }
+
+        // Convert date fields to timestamp
+        foreach (['tstamp', 'start', 'stop'] as $field) {
+            if (isset($row[$field]) && $row[$field] !== '') {
+                $row[$field] = (int)$row[$field];
+            }
         }
 
         return new JsonResponse($row);

@@ -24,7 +24,16 @@ class TankController extends AbstractController
 
         $data = [];
         foreach ($models as $model) {
-            $data[] = $model->row();
+            $row = $model->row();
+
+            // Convert date fields to timestamp
+            foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop'] as $field) {
+                if (isset($row[$field]) && $row[$field] !== '') {
+                    $row[$field] = (int)$row[$field];
+                }
+            }
+
+            $data[] = $row;
         }
 
         return new JsonResponse($data);
@@ -39,6 +48,15 @@ class TankController extends AbstractController
             return new JsonResponse(['error' => 'Tank not found'], 404);
         }
 
-        return new JsonResponse($model->row());
+        $row = $model->row();
+
+        // Convert date fields to timestamp
+        foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop'] as $field) {
+            if (isset($row[$field]) && $row[$field] !== '') {
+                $row[$field] = (int)$row[$field];
+            }
+        }
+
+        return new JsonResponse($row);
     }
 }
