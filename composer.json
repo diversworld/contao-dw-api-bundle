@@ -57,6 +57,5 @@
     "scripts": {
         "unit-tests": "@php tools/phpunit/vendor/bin/phpunit -c tools/phpunit/phpunit.xml.dist",
         "cs-fixer": "@php tools/ecs/vendor/bin/ecs check config/ contao/ src/ templates/ tests/ --config tools/ecs/config/default.php --fix --ansi"
-    },
-    "version": "0.0.1"
+    }
 }
