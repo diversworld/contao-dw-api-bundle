@@ -21,7 +21,7 @@ class ReservationController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly Connection $db,
+        private readonly Connection      $db,
         private readonly ContaoFramework $framework
     )
     {
