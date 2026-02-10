@@ -39,6 +39,7 @@ class LogoutController extends AbstractController
             'success' => true
         ]);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

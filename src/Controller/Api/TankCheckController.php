@@ -186,6 +186,7 @@ class TankCheckController extends AbstractController
 
         return new JsonResponse(['success' => true, 'booking_number' => $booking->bookingNumber]);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

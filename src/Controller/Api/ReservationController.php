@@ -150,6 +150,7 @@ class ReservationController extends AbstractController
 
         return new JsonResponse(['success' => true, 'id' => $reservation->id]);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

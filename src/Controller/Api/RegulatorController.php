@@ -67,6 +67,7 @@ class RegulatorController extends AbstractController
 
         return new JsonResponse($row);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

@@ -118,6 +118,7 @@ class LoginController extends AbstractController
 
         return 'member';
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

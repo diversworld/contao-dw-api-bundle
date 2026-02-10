@@ -104,6 +104,7 @@ class InstructorController extends AbstractController
 
         return false;
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

@@ -138,6 +138,7 @@ class CourseController extends AbstractController
 
         return new JsonResponse(['success' => true, 'id' => $enrollment->id]);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

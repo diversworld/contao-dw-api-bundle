@@ -64,6 +64,7 @@ class EnrollmentController extends AbstractController
 
         return new JsonResponse($result);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

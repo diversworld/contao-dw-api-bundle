@@ -165,6 +165,7 @@ class MeController extends AbstractController
 
         return new JsonResponse(['success' => true]);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {

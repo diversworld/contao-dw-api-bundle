@@ -124,6 +124,7 @@ class EventController extends AbstractController
 
         return new JsonResponse($data);
     }
+
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
