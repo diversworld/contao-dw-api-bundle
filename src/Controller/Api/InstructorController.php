@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class InstructorController extends AbstractController
 {
     public function __construct(
-        private readonly Security        $security,
+        private readonly Security $security,
         private readonly ContaoFramework $framework
     )
     {
@@ -76,6 +76,7 @@ class InstructorController extends AbstractController
 
     private function isInstructor(): bool
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         if (!$user instanceof FrontendUser) {

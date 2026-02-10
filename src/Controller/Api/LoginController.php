@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FrontendUser;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +22,8 @@ class LoginController extends AbstractController
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly RequestStack          $requestStack
+        private readonly RequestStack          $requestStack,
+        private readonly ContaoFramework       $framework
     )
     {
     }
@@ -29,6 +31,7 @@ class LoginController extends AbstractController
     #[Route('', name: 'login_check', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
+        $this->framework->initialize();
         $content = json_decode($request->getContent(), true);
 
         if (!$content) {
@@ -89,6 +92,7 @@ class LoginController extends AbstractController
 
     private function getMemberRole($user): string
     {
+        $this->framework->initialize();
         if (!$user instanceof FrontendUser) {
             return 'member';
         }
