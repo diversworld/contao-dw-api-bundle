@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class TankCheckController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security,
+        private readonly Security        $security,
         private readonly ContaoFramework $framework
     )
     {
