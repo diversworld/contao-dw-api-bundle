@@ -8,6 +8,8 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventScheduleModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseModulesModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\StringUtil;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,9 +18,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/events', name: 'api_events_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class EventController extends AbstractController
 {
+    public function __construct(
+        private readonly ContaoFramework $framework
+    )
+    {
+    }
+
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcCourseEventModel::findAll();
 
         if (null === $models) {
@@ -48,6 +57,7 @@ class EventController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcCourseEventModel::findByPk($id);
 
         if (null === $model) {
@@ -77,6 +87,7 @@ class EventController extends AbstractController
     #[Route('/{id}/schedule', name: 'schedule', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function schedule(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $event = DcCourseEventModel::findByPk($id);
 
         if (null === $event) {

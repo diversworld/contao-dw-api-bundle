@@ -6,6 +6,7 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FrontendUser;
 use Contao\StringUtil;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentExercisesModel;
@@ -24,7 +25,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ProgressController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -35,6 +37,7 @@ class ProgressController extends AbstractController
     #[Route('', name: 'student', methods: ['GET'])]
     public function studentProgress(): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -133,6 +136,7 @@ class ProgressController extends AbstractController
     #[Route('/instructor', name: 'instructor', methods: ['GET'])]
     public function instructorStudents(): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -251,6 +255,7 @@ class ProgressController extends AbstractController
     #[Route('/{exerciseId}', name: 'update', methods: ['PATCH'], requirements: ['exerciseId' => '\d+'])]
     public function updateProgress(int $exerciseId, Request $request): JsonResponse
     {
+        $this->framework->initialize();
         // Simple instructor check: Is logged in?
         $user = $this->security->getUser();
 

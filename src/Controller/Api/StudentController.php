@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +17,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class StudentController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -24,6 +26,7 @@ class StudentController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcStudentsModel::findAll();
 
         if (null === $models) {
@@ -50,6 +53,7 @@ class StudentController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcStudentsModel::findByPk($id);
 
         if (null === $model) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcTanksModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,9 +14,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/tanks', name: 'api_tanks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class TankController extends AbstractController
 {
+    public function __construct(
+        private readonly ContaoFramework $framework
+    )
+    {
+    }
+
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcTanksModel::findAll();
 
         if (null === $models) {
@@ -42,6 +50,7 @@ class TankController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcTanksModel::findByPk($id);
 
         if (null === $model) {

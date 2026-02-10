@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\MemberModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,7 +20,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class MeController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -27,6 +29,7 @@ class MeController extends AbstractController
     #[Route('', name: 'me', methods: ['GET'])]
     public function me(): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {
@@ -81,6 +84,7 @@ class MeController extends AbstractController
     #[Route('', name: 'update', methods: ['PATCH'])]
     public function update(Request $request): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         $data = json_decode($request->getContent(), true);
@@ -108,7 +112,7 @@ class MeController extends AbstractController
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {
-
+        $this->framework->initialize();
         $frontendUser = $this->security->getUser();
 
         if (!$frontendUser instanceof PasswordAuthenticatedUserInterface) {

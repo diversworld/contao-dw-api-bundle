@@ -8,6 +8,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,7 +20,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class EnrollmentController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -27,6 +29,7 @@ class EnrollmentController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\StringUtil;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
@@ -20,7 +21,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CourseController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -28,6 +30,7 @@ class CourseController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcDiveCourseModel::findPublished();
 
         if (null === $models) {
@@ -57,6 +60,7 @@ class CourseController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcDiveCourseModel::findByPk($id);
 
         if (null === $model || !$model->published) {
@@ -81,6 +85,7 @@ class CourseController extends AbstractController
     #[Route('/enroll', name: 'enroll', methods: ['POST'])]
     public function enroll(Request $request): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);

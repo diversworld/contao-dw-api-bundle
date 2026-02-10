@@ -6,6 +6,7 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -20,7 +21,8 @@ class ReservationController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly Connection $db
+        private readonly Connection $db,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -28,6 +30,7 @@ class ReservationController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {
@@ -60,6 +63,7 @@ class ReservationController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcReservationModel::findByPk($id);
 
         if (null === $model) {
@@ -95,6 +99,7 @@ class ReservationController extends AbstractController
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {

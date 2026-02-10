@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcRegulatorsModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -12,9 +13,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/regulators', name: 'api_regulators_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class RegulatorController extends AbstractController
 {
+    public function __construct(
+        private readonly ContaoFramework $framework
+    )
+    {
+    }
+
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcRegulatorsModel::findAll();
 
         if (null === $models) {
@@ -41,6 +49,7 @@ class RegulatorController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcRegulatorsModel::findByPk($id);
 
         if (null === $model) {

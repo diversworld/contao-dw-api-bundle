@@ -6,6 +6,7 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FrontendUser;
 use Contao\StringUtil;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -18,7 +19,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class InstructorController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -26,6 +28,7 @@ class InstructorController extends AbstractController
     #[Route('/approve/{id}', name: 'approve', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function approve(int $id): JsonResponse
     {
+        $this->framework->initialize();
         if (!$this->isInstructor()) {
             return new JsonResponse(['error' => 'Forbidden: Instructor role required'], 403);
         }
@@ -49,6 +52,7 @@ class InstructorController extends AbstractController
     #[Route('/reject/{id}', name: 'reject', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function reject(int $id): JsonResponse
     {
+        $this->framework->initialize();
         if (!$this->isInstructor()) {
             return new JsonResponse(['error' => 'Forbidden: Instructor role required'], 403);
         }
