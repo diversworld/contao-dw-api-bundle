@@ -22,8 +22,8 @@ class LoginController extends AbstractController
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly RequestStack          $requestStack,
-        private readonly ContaoFramework       $framework
+        private readonly RequestStack    $requestStack,
+        private readonly ContaoFramework $framework
     )
     {
     }
