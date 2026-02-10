@@ -20,7 +20,7 @@ class InstructorController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -28,7 +28,7 @@ class InstructorController extends AbstractController
     #[Route('/approve/{id}', name: 'approve', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function approve(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         if (!$this->isInstructor()) {
             return new JsonResponse(['error' => 'Forbidden: Instructor role required'], 403);
         }
@@ -52,7 +52,7 @@ class InstructorController extends AbstractController
     #[Route('/reject/{id}', name: 'reject', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function reject(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         if (!$this->isInstructor()) {
             return new JsonResponse(['error' => 'Forbidden: Instructor role required'], 403);
         }
@@ -76,7 +76,7 @@ class InstructorController extends AbstractController
 
     private function isInstructor(): bool
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
 
         if (!$user instanceof FrontendUser) {
@@ -103,5 +103,13 @@ class InstructorController extends AbstractController
         }
 
         return false;
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

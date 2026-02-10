@@ -23,7 +23,7 @@ class LoginController extends AbstractController
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly RequestStack    $requestStack,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -31,7 +31,7 @@ class LoginController extends AbstractController
     #[Route('', name: 'login_check', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $content = json_decode($request->getContent(), true);
 
         if (!$content) {
@@ -92,7 +92,7 @@ class LoginController extends AbstractController
 
     private function getMemberRole($user): string
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         if (!$user instanceof FrontendUser) {
             return 'member';
         }
@@ -117,5 +117,13 @@ class LoginController extends AbstractController
         }
 
         return 'member';
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

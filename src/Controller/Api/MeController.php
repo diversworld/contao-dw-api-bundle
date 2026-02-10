@@ -21,7 +21,7 @@ class MeController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -29,7 +29,7 @@ class MeController extends AbstractController
     #[Route('', name: 'me', methods: ['GET'])]
     public function me(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {
@@ -55,7 +55,7 @@ class MeController extends AbstractController
 
     private function getMemberRole($user): string
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         if (!$user instanceof \Contao\FrontendUser) {
             return 'member';
         }
@@ -85,8 +85,12 @@ class MeController extends AbstractController
     #[Route('', name: 'update', methods: ['PATCH'])]
     public function update(Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
+
+        if (!$user instanceof \Contao\FrontendUser) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
 
         $data = json_decode($request->getContent(), true);
 
@@ -102,7 +106,19 @@ class MeController extends AbstractController
             }
         }
 
-        $user->save();
+        // 👇 WICHTIG: MemberModel laden um zu speichern
+        $memberModel = \Contao\MemberModel::findByPk($user->id);
+        if (!$memberModel) {
+            return new JsonResponse(['error' => 'Member not found'], 404);
+        }
+
+        foreach ($fields as $field) {
+            if (isset($data[$field])) {
+                $memberModel->$field = ($field === 'dateOfBirth') ? (int)$data[$field] : (string)$data[$field];
+            }
+        }
+
+        $memberModel->save();
 
         return new JsonResponse(['success' => true]);
     }
@@ -113,7 +129,7 @@ class MeController extends AbstractController
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $frontendUser = $this->security->getUser();
 
         if (!$frontendUser instanceof PasswordAuthenticatedUserInterface) {
@@ -148,5 +164,13 @@ class MeController extends AbstractController
         $memberModel->save();
 
         return new JsonResponse(['success' => true]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

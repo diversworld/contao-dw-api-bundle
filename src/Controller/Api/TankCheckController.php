@@ -22,7 +22,7 @@ class TankCheckController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -30,7 +30,7 @@ class TankCheckController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcCheckProposalModel::findBy(['published=?'], [1], ['order' => 'proposalDate DESC']);
 
         if (null === $models) {
@@ -65,7 +65,7 @@ class TankCheckController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcCheckProposalModel::findByPk($id);
 
         if (null === $model) {
@@ -98,7 +98,7 @@ class TankCheckController extends AbstractController
     #[IsGranted('ROLE_MEMBER')]
     public function book(Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
         $content = json_decode($request->getContent(), true);
 
@@ -185,5 +185,13 @@ class TankCheckController extends AbstractController
         $booking->save();
 
         return new JsonResponse(['success' => true, 'booking_number' => $booking->bookingNumber]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

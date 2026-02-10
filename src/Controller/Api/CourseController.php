@@ -22,7 +22,7 @@ class CourseController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -30,7 +30,7 @@ class CourseController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcDiveCourseModel::findPublished();
 
         if (null === $models) {
@@ -60,7 +60,7 @@ class CourseController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcDiveCourseModel::findByPk($id);
 
         if (null === $model || !$model->published) {
@@ -85,7 +85,7 @@ class CourseController extends AbstractController
     #[Route('/enroll', name: 'enroll', methods: ['POST'])]
     public function enroll(Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -137,5 +137,13 @@ class CourseController extends AbstractController
         }
 
         return new JsonResponse(['success' => true, 'id' => $enrollment->id]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

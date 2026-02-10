@@ -22,7 +22,7 @@ class ReservationController extends AbstractController
     public function __construct(
         private readonly Security $security,
         private readonly Connection $db,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -30,7 +30,7 @@ class ReservationController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {
@@ -63,7 +63,7 @@ class ReservationController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcReservationModel::findByPk($id);
 
         if (null === $model) {
@@ -99,7 +99,7 @@ class ReservationController extends AbstractController
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
 
         if (!$user) {
@@ -149,5 +149,13 @@ class ReservationController extends AbstractController
         }
 
         return new JsonResponse(['success' => true, 'id' => $reservation->id]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

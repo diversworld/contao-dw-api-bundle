@@ -18,7 +18,7 @@ class StudentController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -26,7 +26,7 @@ class StudentController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcStudentsModel::findAll();
 
         if (null === $models) {
@@ -53,7 +53,7 @@ class StudentController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcStudentsModel::findByPk($id);
 
         if (null === $model) {
@@ -70,5 +70,13 @@ class StudentController extends AbstractController
         }
 
         return new JsonResponse($row);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

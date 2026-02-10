@@ -17,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class EquipmentController extends AbstractController
 {
     public function __construct(
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -25,7 +25,7 @@ class EquipmentController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcEquipmentModel::findAll();
 
         if (null === $models) {
@@ -52,7 +52,7 @@ class EquipmentController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcEquipmentModel::findByPk($id);
 
         if (null === $model) {
@@ -69,5 +69,13 @@ class EquipmentController extends AbstractController
         }
 
         return new JsonResponse($row);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

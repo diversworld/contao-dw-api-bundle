@@ -26,7 +26,7 @@ class ProgressController extends AbstractController
 {
     public function __construct(
         private readonly Security $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -37,7 +37,7 @@ class ProgressController extends AbstractController
     #[Route('', name: 'student', methods: ['GET'])]
     public function studentProgress(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -136,7 +136,7 @@ class ProgressController extends AbstractController
     #[Route('/instructor', name: 'instructor', methods: ['GET'])]
     public function instructorStudents(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $user = $this->security->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -255,7 +255,7 @@ class ProgressController extends AbstractController
     #[Route('/{exerciseId}', name: 'update', methods: ['PATCH'], requirements: ['exerciseId' => '\d+'])]
     public function updateProgress(int $exerciseId, Request $request): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         // Simple instructor check: Is logged in?
         $user = $this->security->getUser();
 
@@ -289,5 +289,13 @@ class ProgressController extends AbstractController
         }
 
         return new JsonResponse(['success' => true]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

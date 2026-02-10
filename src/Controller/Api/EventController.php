@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class EventController extends AbstractController
 {
     public function __construct(
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -27,7 +27,7 @@ class EventController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcCourseEventModel::findAll();
 
         if (null === $models) {
@@ -57,7 +57,7 @@ class EventController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcCourseEventModel::findByPk($id);
 
         if (null === $model) {
@@ -87,7 +87,7 @@ class EventController extends AbstractController
     #[Route('/{id}/schedule', name: 'schedule', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function schedule(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $event = DcCourseEventModel::findByPk($id);
 
         if (null === $event) {
@@ -123,5 +123,13 @@ class EventController extends AbstractController
         }
 
         return new JsonResponse($data);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

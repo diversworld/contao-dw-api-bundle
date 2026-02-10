@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class RegulatorController extends AbstractController
 {
     public function __construct(
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -22,7 +22,7 @@ class RegulatorController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcRegulatorsModel::findAll();
 
         if (null === $models) {
@@ -49,7 +49,7 @@ class RegulatorController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcRegulatorsModel::findByPk($id);
 
         if (null === $model) {
@@ -66,5 +66,13 @@ class RegulatorController extends AbstractController
         }
 
         return new JsonResponse($row);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

@@ -21,7 +21,7 @@ class PasswordController extends AbstractController
 {
     public function __construct(
         private readonly Security        $security,
-        private readonly ContaoFramework $framework
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -32,7 +32,7 @@ class PasswordController extends AbstractController
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $frontendUser = $this->security->getUser();
 
         if (!$frontendUser instanceof PasswordAuthenticatedUserInterface) {
@@ -67,5 +67,13 @@ class PasswordController extends AbstractController
         $memberModel->save();
 
         return new JsonResponse(['success' => true]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }

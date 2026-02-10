@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +17,8 @@ class LogoutController extends AbstractController
 {
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly RequestStack $requestStack
+        private readonly RequestStack $requestStack,
+        private ?ContaoFramework $framework = null
     )
     {
     }
@@ -24,6 +26,7 @@ class LogoutController extends AbstractController
     #[Route('', name: 'logout', methods: ['POST'])]
     public function logout(Request $request): JsonResponse
     {
+        $this->getFramework()->initialize();
         // Security Token im Storage löschen
         $this->tokenStorage->setToken(null);
 
@@ -35,5 +38,13 @@ class LogoutController extends AbstractController
         return new JsonResponse([
             'success' => true
         ]);
+    }
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+        }
+
+        return $this->framework;
     }
 }
