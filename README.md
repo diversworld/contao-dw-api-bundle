@@ -71,6 +71,25 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/tank-checks/{id}`: Details zum Prüfvorschlag inkl. verknüpfter Artikel.
 - `POST /api/tank-checks/book`: Buchung einer TÜV-Prüfung für eine oder mehrere Flaschen.
     - Erwartet JSON mit `proposal_id` und einer Liste von `items` (Flaschendaten und gewählte Artikel-IDs).
+    - Optional unterstützt: `notes` auf Buchungsebene sowie `notes` je Item/Flasche.
+    - Beispiel:
+      ```json
+      {
+        "proposal_id": 12,
+        "notes": "Bitte Rückruf bei Rückfragen.",
+        "items": [
+          {
+            "serialNumber": "ABC123",
+            "manufacturer": "Scubatech",
+            "bazNumber": "B12345",
+            "size": "12",
+            "o2clean": true,
+            "articles": [1, 3, 5],
+            "notes": "Ventil klemmt gelegentlich"
+          }
+        ]
+      }
+      ```
 
 ### Authentifizierung
 

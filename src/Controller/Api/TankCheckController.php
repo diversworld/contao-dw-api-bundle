@@ -9,6 +9,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCheckArticlesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCheckBookingModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCheckOrderModel;
 use Contao\CalendarEventsModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,7 +21,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class TankCheckController extends AbstractController
 {
     public function __construct(
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ContaoFramework $framework
     )
     {
     }
@@ -28,6 +30,7 @@ class TankCheckController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        $this->framework->initialize();
         $models = DcCheckProposalModel::findBy(['published=?'], [1], ['order' => 'proposalDate DESC']);
 
         if (null === $models) {
@@ -62,6 +65,7 @@ class TankCheckController extends AbstractController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        $this->framework->initialize();
         $model = DcCheckProposalModel::findByPk($id);
 
         if (null === $model) {
@@ -94,6 +98,7 @@ class TankCheckController extends AbstractController
     #[IsGranted('ROLE_MEMBER')]
     public function book(Request $request): JsonResponse
     {
+        $this->framework->initialize();
         $user = $this->security->getUser();
         $content = json_decode($request->getContent(), true);
 
@@ -120,6 +125,10 @@ class TankCheckController extends AbstractController
         $booking->lastname = $user->lastname;
         $booking->email = $user->email;
         $booking->phone = $user->phone;
+        // Optional: Notizen aus dem Buchungsformular übernehmen
+        if (isset($content['notes']) && is_string($content['notes'])) {
+            $booking->notes = $content['notes'];
+        }
 
         if (!$booking->save()) {
             return new JsonResponse(['error' => 'Could not create booking'], 500);
@@ -138,16 +147,27 @@ class TankCheckController extends AbstractController
             $order->size = $item['size'] ?? '';
             $order->o2clean = (bool)($item['o2clean'] ?? false);
             $order->status = 'ordered';
+            // Optional: Notizen pro Flasche/Position
+            if (isset($item['notes']) && is_string($item['notes'])) {
+                $order->notes = $item['notes'];
+            }
 
             // Articles as blob/serialized array
             if (isset($item['articles']) && is_array($item['articles'])) {
-                $order->selectedArticles = serialize($item['articles']);
+                // Artikel-IDs auf Integer normalisieren
+                $articleIds = array_values(array_filter(array_map(static function ($v) {
+                    if (is_numeric($v)) {
+                        return (int)$v;
+                    }
+                    return null;
+                }, $item['articles']), static fn($v) => null !== $v));
+                $order->selectedArticles = serialize($articleIds);
             }
 
             // Calculate price if articles provided
             $itemPrice = 0;
-            if (isset($item['articles']) && is_array($item['articles'])) {
-                foreach ($item['articles'] as $articleId) {
+            if (isset($articleIds) && is_array($articleIds)) {
+                foreach ($articleIds as $articleId) {
                     $art = DcCheckArticlesModel::findByPk($articleId);
                     if ($art) {
                         $itemPrice += (float)$art->price;
