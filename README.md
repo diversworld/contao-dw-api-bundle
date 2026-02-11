@@ -11,6 +11,7 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen de
 - **Ausrüstung:** Zugriff auf Leihausrüstung (Jackets, Anzüge, etc.).
 - **Tauchflaschen & Atemregler:** Spezielle Endpunkte für Flaschen und Regler.
 - **TÜV-Checks:** Übersicht über anstehende Revisionen und Prüfvorschläge.
+- **App-Konfiguration & News:** Bereitstellung von Logo, Info-Texten und Nachrichten für die iOS-App.
 - **Schüler:** Verwaltung von Kursteilnehmern.
 - **JSON-Format:** Alle Antworten sind für die einfache Integration in iOS optimiert.
 
@@ -96,6 +97,7 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `POST /api/login`: Login für Frontend-Benutzer.
     - Erwartet JSON mit `username` und `password`.
   - Gibt bei Erfolg Benutzerdaten inkl. `role` zurück.
+  - Prüft, ob die API in der `tl_dc_config` aktiviert wurde.
 - `POST /api/logout`: Logout für Frontend-Benutzer.
     - Beendet die aktuelle Session.
 - `GET /api/me`: Aktuelle Benutzerdaten inkl. `role` abrufen.
@@ -106,6 +108,22 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `PATCH /api/password`: Passwort ändern.
     - Erwartet JSON mit `currentPassword` und `newPassword`.
     - Erfordert eine aktive Session.
+
+### App & News
+
+- `GET /api/app/config`: Liefert die globale App-Konfiguration (Logo-Pfad, Info-Text, API-Status).
+- `GET /api/app/news`: Liste der News aus dem konfigurierten Archiv (inkl. Headline, Teaser und Vorschaubild).
+- `GET /api/app/news/{id}`: Details zu einer News-Meldung.
+
+## Konfiguration
+
+Die Einstellungen für die App und die API werden im Contao Backend unter **Diveclub > Einstellungen (tl_dc_config)**
+vorgenommen:
+
+- **API aktivieren:** Schaltet den Zugriff für die App frei.
+- **App-Logo:** Bilddatei für die Startseite.
+- **Info-Text App:** Begrüßungstext für die Startseite.
+- **News-Archiv:** Auswahl des Archivs, das in der App angezeigt werden soll.
 
 ## Installation
 

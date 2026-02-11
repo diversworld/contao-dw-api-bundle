@@ -6,6 +6,8 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FrontendUser;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\StringUtil;
+use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +38,12 @@ class LoginController extends AbstractController
 
         if (!$content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
+        }
+
+        // Check if API is enabled
+        $config = DcConfigModel::findOneBy('published', '1');
+        if (!$config || !$config->activateApi) {
+            return new JsonResponse(['error' => 'API is currently disabled'], 503);
         }
 
         $username = $content['username'] ?? '';
