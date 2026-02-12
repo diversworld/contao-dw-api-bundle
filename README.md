@@ -111,7 +111,8 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 ### App & News
 
-- `GET /api/app/config`: Liefert die globale App-Konfiguration (Logo-Pfad, Info-Text, API-Status).
+- `GET /api/app/config`: Liefert die globale App-Konfiguration (API-Status, Logo-Pfad, Info-Text, Impressum,
+  Datenschutz, Nutzungsbedingungen, News-Archiv-ID).
 - `GET /api/app/news`: Liste der News aus dem konfigurierten Archiv (inkl. Headline, Teaser und Vorschaubild).
 - `GET /api/app/news/{id}`: Details zu einer News-Meldung.
 
@@ -123,6 +124,9 @@ vorgenommen:
 - **API aktivieren:** Schaltet den Zugriff für die App frei.
 - **App-Logo:** Bilddatei für die Startseite.
 - **Info-Text App:** Begrüßungstext für die Startseite.
+- **Impressum (App):** Rechtliche Angaben für die App.
+- **Datenschutzhinweise (App):** Hinweise zum Datenschutz für die App.
+- **Nutzungsbedingungen (App):** Nutzungsbedingungen/AGB für die App.
 - **News-Archiv:** Auswahl des Archivs, das in der App angezeigt werden soll.
 
 ## Installation
@@ -131,9 +135,10 @@ vorgenommen:
    ```bash
    composer require diversworld/contao-dw-api-bundle
    ```
-2. Contao Installtool ausführen oder Migrationen starten:
+2. Contao Installtool ausführen oder Migrationen starten (inkl. neuer Felder):
    ```bash
-   vendor/bin/contao-console contao:migrate
+   ddev php vendor/bin/contao-console contao:migrate -n
+   ddev php vendor/bin/contao-console cache:clear --env=prod
    ```
 3. Sicherstellen, dass das `diversworld/contao-diveclub-bundle` ebenfalls installiert ist, da dieses API-Bundle darauf
    aufbaut.

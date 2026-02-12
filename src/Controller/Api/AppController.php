@@ -45,6 +45,9 @@ class AppController extends AbstractController
             'logo' => $logoPath,
             'infoText' => StringUtil::toHtml5($config->apiText),
             'newsArchive' => (int)$config->apiNewsArchive,
+            'imprint' => StringUtil::toHtml5($config->apiImprint),
+            'privacy' => StringUtil::toHtml5($config->apiPrivacy),
+            'terms' => StringUtil::toHtml5($config->apiTerms),
         ]);
     }
 
