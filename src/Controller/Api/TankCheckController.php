@@ -48,6 +48,11 @@ class TankCheckController extends AbstractController
                 }
             }
 
+            // Normalisierte Preis-Felder
+            if (isset($item['rentalFee'])) {
+                $item['rentalFee'] = (float)$item['rentalFee'];
+            }
+
             // Verknüpftes Event laden für genaues Datum
             if ($model->checkId) {
                 $event = CalendarEventsModel::findByPk($model->checkId);
@@ -79,6 +84,10 @@ class TankCheckController extends AbstractController
             if (isset($data[$field]) && $data[$field] !== '') {
                 $data[$field] = (int)$data[$field];
             }
+        }
+
+        if (isset($data['rentalFee'])) {
+            $data['rentalFee'] = (float)$data['rentalFee'];
         }
 
         // Artikel laden

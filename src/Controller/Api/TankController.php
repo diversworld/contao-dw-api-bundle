@@ -35,7 +35,7 @@ class TankController extends AbstractController
             $row = $model->row();
 
             // Convert date fields to timestamp
-            foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop'] as $field) {
+            foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop', 'lastOrder'] as $field) {
                 if (isset($row[$field]) && $row[$field] !== '') {
                     $row[$field] = (int)$row[$field];
                 }
@@ -60,7 +60,7 @@ class TankController extends AbstractController
         $row = $model->row();
 
         // Convert date fields to timestamp
-        foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop'] as $field) {
+        foreach (['tstamp', 'lastCheckDate', 'nextCheckDate', 'start', 'stop', 'lastOrder'] as $field) {
             if (isset($row[$field]) && $row[$field] !== '') {
                 $row[$field] = (int)$row[$field];
             }

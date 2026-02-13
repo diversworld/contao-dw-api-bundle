@@ -49,7 +49,7 @@ class ReservationController extends AbstractController
         $data = [];
         foreach ($models as $model) {
             $row = $model->row();
-            foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+            foreach (['tstamp', 'reserved_at', 'picked_up_at', 'returned_at', 'start', 'stop'] as $f) {
                 if (isset($row[$f]) && $row[$f] !== '') {
                     $row[$f] = (int)$row[$f];
                 }
@@ -71,7 +71,7 @@ class ReservationController extends AbstractController
         }
 
         $data = $model->row();
-        foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+        foreach (['tstamp', 'reserved_at', 'picked_up_at', 'returned_at', 'start', 'stop'] as $f) {
             if (isset($data[$f]) && $data[$f] !== '') {
                 $data[$f] = (int)$data[$f];
             }
@@ -84,7 +84,7 @@ class ReservationController extends AbstractController
         if ($items) {
             foreach ($items as $item) {
                 $row = $item->row();
-                foreach (['tstamp', 'reserved_at', 'start', 'stop'] as $f) {
+                foreach (['tstamp', 'reserved_at', 'picked_up_at', 'returned_at', 'start', 'stop', 'created_at', 'updated_at'] as $f) {
                     if (isset($row[$f]) && $row[$f] !== '') {
                         $row[$f] = (int)$row[$f];
                     }
@@ -141,9 +141,12 @@ class ReservationController extends AbstractController
                     'tstamp' => time(),
                     'item_id' => (int)($itemData['item_id'] ?? 0),
                     'item_type' => $itemData['item_type'] ?? '',
+                    'types' => $itemData['types'] ?? '',
+                    'sub_type' => $itemData['sub_type'] ?? '',
                     'reserved_at' => (string)time(),
                     'reservation_status' => 'reserved',
-                    'published' => '1'
+                    'published' => '1',
+                    'notes' => $itemData['notes'] ?? ''
                 ]);
             }
         }

@@ -40,6 +40,10 @@ class RegulatorController extends AbstractController
                 }
             }
 
+            if (isset($row['rentalFee'])) {
+                $row['rentalFee'] = (float)$row['rentalFee'];
+            }
+
             $data[] = $row;
         }
 
@@ -63,6 +67,10 @@ class RegulatorController extends AbstractController
             if (isset($row[$field]) && $row[$field] !== '') {
                 $row[$field] = (int)$row[$field];
             }
+        }
+
+        if (isset($row['rentalFee'])) {
+            $row['rentalFee'] = (float)$row['rentalFee'];
         }
 
         return new JsonResponse($row);

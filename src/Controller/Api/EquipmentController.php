@@ -43,6 +43,11 @@ class EquipmentController extends AbstractController
                 }
             }
 
+            // Explicitly ensure numeric fields are numeric
+            if (isset($row['rentalFee'])) {
+                $row['rentalFee'] = (float)$row['rentalFee'];
+            }
+
             $data[] = $row;
         }
 
@@ -66,6 +71,11 @@ class EquipmentController extends AbstractController
             if (isset($row[$field]) && $row[$field] !== '') {
                 $row[$field] = (int)$row[$field];
             }
+        }
+
+        // Explicitly ensure numeric fields are numeric
+        if (isset($row['rentalFee'])) {
+            $row['rentalFee'] = (float)$row['rentalFee'];
         }
 
         return new JsonResponse($row);

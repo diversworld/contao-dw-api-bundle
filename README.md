@@ -15,6 +15,15 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen de
 - **Schüler:** Verwaltung von Kursteilnehmern.
 - **JSON-Format:** Alle Antworten sind für die einfache Integration in iOS optimiert.
 
+### JSON-Format & Datentypen
+
+- **Datumswerte:** Alle Datumsfelder (z. B. `tstamp`, `reserved_at`, `picked_up_at`, `returned_at`, `lastOrder`,
+  `buyDate`) werden einheitlich als **Integer-Timestamp** zurückgegeben.
+- **Preise:** Preis- und Gebührenfelder (z. B. `rentalFee`, `totalPrice`, `price`) werden explizit als **Float**
+  zurückgegeben.
+- **Modelle:** Die Endpunkte geben grundsätzlich alle Felder der zugrundeliegenden Datenbank-Tabellen zurück (
+  `model->row()`).
+
 ## API Endpunkte
 
 Alle Endpunkte befinden sich unter dem Präfix `/api`.
@@ -26,10 +35,12 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 ### Reservierungen
 
-- `GET /api/reservations`: Liste aller Reservierungen.
+- `GET /api/reservations`: Liste aller Reservierungen des angemeldeten Benutzers.
 - `GET /api/reservations/{id}`: Details inkl. aller gebuchten Items.
+  - Gibt bei Items auch die Timestamps `created_at` und `updated_at` zurück.
 - `POST /api/reservations`: Neue Reservierung erstellen.
     - Erwartet JSON mit `member_id`, optional `reservedFor`, `asset_type` und einer Liste von `items`.
+  - Bei `items` können zusätzlich `types`, `sub_type` und `notes` übergeben werden.
 
 ### Kurse
 
