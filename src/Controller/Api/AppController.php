@@ -11,7 +11,7 @@ use Contao\StringUtil;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/app', name: 'api_app_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class AppController extends AbstractController
@@ -43,11 +43,11 @@ class AppController extends AbstractController
         return new JsonResponse([
             'activateApi' => (bool)$config->activateApi,
             'logo' => $logoPath,
-            'infoText' => StringUtil::toHtml5($config->apiText),
+            'infoText' => StringUtil::restoreBasicEntities($config->apiText),
             'newsArchive' => (int)$config->apiNewsArchive,
-            'imprint' => StringUtil::toHtml5($config->apiImprint),
-            'privacy' => StringUtil::toHtml5($config->apiPrivacy),
-            'terms' => StringUtil::toHtml5($config->apiTerms),
+            'imprint' => StringUtil::restoreBasicEntities($config->apiImprint),
+            'privacy' => StringUtil::restoreBasicEntities($config->apiPrivacy),
+            'terms' => StringUtil::restoreBasicEntities($config->apiTerms),
         ]);
     }
 
@@ -83,7 +83,7 @@ class AppController extends AbstractController
                 'id' => (int)$item->id,
                 'date' => (int)$item->date,
                 'headline' => $item->headline,
-                'teaser' => StringUtil::toHtml5($item->teaser),
+                'teaser' => StringUtil::restoreBasicEntities($item->teaser),
                 'image' => $imagePath,
             ];
         }
@@ -119,8 +119,8 @@ class AppController extends AbstractController
             'id' => (int)$item->id,
             'date' => (int)$item->date,
             'headline' => $item->headline,
-            'teaser' => StringUtil::toHtml5($item->teaser),
-            'text' => StringUtil::toHtml5($item->teaser), // Fallback if no content elements handled
+            'teaser' => StringUtil::restoreBasicEntities($item->teaser),
+            'text' => StringUtil::restoreBasicEntities($item->teaser), // Fallback if no content elements handled
             'image' => $imagePath,
         ]);
     }
