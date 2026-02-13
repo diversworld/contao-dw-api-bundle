@@ -96,7 +96,11 @@ class TankCheckController extends AbstractController
 
         if ($articles) {
             foreach ($articles as $article) {
-                $data['articles'][] = $article->row();
+                $row = $article->row();
+                if (isset($row['price'])) {
+                    $row['price'] = (float)$row['price'];
+                }
+                $data['articles'][] = $row;
             }
         }
 
@@ -145,6 +149,7 @@ class TankCheckController extends AbstractController
 
         // 2. Create Orders for each item (tl_dc_check_order)
         $totalPrice = 0;
+        $itemResults = [];
         foreach ($content['items'] as $item) {
             $order = new DcCheckOrderModel();
             $order->tstamp = time();
@@ -187,13 +192,22 @@ class TankCheckController extends AbstractController
             $totalPrice += $itemPrice;
 
             $order->save();
+            $itemResults[] = [
+                'serialNumber' => $order->serialNumber,
+                'totalPrice' => $itemPrice
+            ];
         }
 
         // Update total price in booking
         $booking->totalPrice = $totalPrice;
         $booking->save();
 
-        return new JsonResponse(['success' => true, 'booking_number' => $booking->bookingNumber]);
+        return new JsonResponse([
+            'success' => true,
+            'booking_number' => $booking->bookingNumber,
+            'total_price' => $totalPrice,
+            'items' => $itemResults
+        ]);
     }
 
     private function getFramework(): ContaoFramework
