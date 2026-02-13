@@ -96,9 +96,9 @@ class AppController extends AbstractController
     public function newsDetail(int $id): JsonResponse
     {
         $this->getFramework()->initialize();
-        $item = NewsModel::findPublishedByPk($id);
+        $item = NewsModel::findByPk($id);
 
-        if (!$item) {
+        if (!$item || !$item->published) {
             return new JsonResponse(['error' => 'News not found'], 404);
         }
 
