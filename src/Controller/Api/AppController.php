@@ -8,6 +8,7 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\FilesModel;
 use Contao\NewsModel;
 use Contao\StringUtil;
+use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -128,7 +129,7 @@ class AppController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get(ContaoFramework::class);
         }
 
         return $this->framework;

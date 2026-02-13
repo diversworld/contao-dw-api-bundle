@@ -181,6 +181,7 @@ vorgenommen:
 
 Das Bundle wurde für **Contao 5.7** und **Symfony 7** optimiert:
 
-- **Routing:** Verwendung von PHP 8 Attributen (`#[Route]`) statt Annotationen.
+- **Routing:** Verwendung von PHP 8 Attributen (`#[Route]`) statt Annotationen. Durch die explizite Angabe des Typs
+  `attribute` im `ContaoManager` Plugin wird die Kompatibilität mit Contao 5.3+ sichergestellt.
 - **Security:** Nutzung des `UserPasswordHasherInterface` und `IsGranted` Attributen.
 - **String Handling:** Umstellung auf `StringUtil::restoreBasicEntities()` für volle Kompatibilität mit Contao 5+.
