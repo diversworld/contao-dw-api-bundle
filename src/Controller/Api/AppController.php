@@ -12,6 +12,7 @@ use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/app', name: 'api_app_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
@@ -53,16 +54,37 @@ class AppController extends AbstractController
     }
 
     #[Route('/news', name: 'news_list', methods: ['GET'])]
-    public function newsList(): JsonResponse
+    public function newsList(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
         $config = DcConfigModel::findOneBy('published', '1');
 
-        if (!$config || !$config->activateApi || !$config->apiNewsArchive) {
+        if (!$config || !$config->activateApi) {
             return new JsonResponse([]);
         }
 
-        $news = NewsModel::findPublishedByPids([$config->apiNewsArchive]);
+        $pids = [];
+        $archiveParam = $request->query->get('archive');
+
+        if ($archiveParam) {
+            if (is_array($archiveParam)) {
+                $pids = array_map('intval', $archiveParam);
+            } else {
+                // Handle [1] format if passed as string
+                $pids = array_map('intval', explode(',', trim($archiveParam, '[] ')));
+            }
+        }
+
+        if (empty($pids) && $config->apiNewsArchive) {
+            $pids = [(int)$config->apiNewsArchive];
+        }
+
+        if (empty($pids)) {
+            return new JsonResponse([]);
+        }
+
+        $limit = (int)$request->query->get('limit', 0);
+        $news = NewsModel::findPublishedByPids($pids, null, $limit);
 
         if (!$news) {
             return new JsonResponse([]);

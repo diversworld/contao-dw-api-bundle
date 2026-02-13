@@ -142,6 +142,7 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/app/config`: Liefert die globale App-Konfiguration (API-Status, Logo-Pfad, Info-Text, Impressum,
   Datenschutz, Nutzungsbedingungen, News-Archiv-ID).
 - `GET /api/app/news`: Liste der News aus dem konfigurierten Archiv (inkl. Headline, Teaser und Vorschaubild).
+  - Unterstützt Query-Parameter: `archive=[1,2]` (Liste von Archiv-IDs) und `limit=4` (Anzahl der Einträge).
 - `GET /api/app/news/{id}`: Details zu einer News-Meldung.
 
 ## Konfiguration
