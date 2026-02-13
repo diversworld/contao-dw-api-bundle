@@ -93,10 +93,10 @@ class AppController extends AbstractController
 
         $data = [];
         foreach ($news as $item) {
-            $row = $item->row();
-
             $imagePath = '';
-            if ($item->singleSRC) {
+
+            // Check if addImage is set and singleSRC is provided
+            if ($item->addImage && $item->singleSRC) {
                 $file = FilesModel::findByUuid($item->singleSRC);
                 if ($file) {
                     $imagePath = $file->path;
@@ -133,7 +133,7 @@ class AppController extends AbstractController
         }
 
         $imagePath = '';
-        if ($item->singleSRC) {
+        if ($item->addImage && $item->singleSRC) {
             $file = FilesModel::findByUuid($item->singleSRC);
             if ($file) {
                 $imagePath = $file->path;
@@ -142,13 +142,26 @@ class AppController extends AbstractController
 
         // Get full content from content elements
         $content = '';
+        $images = [];
+
+        if ($imagePath) {
+            $images[] = $imagePath;
+        }
+
         $elements = ContentModel::findPublishedByPidAndTable($item->id, 'tl_news');
         if ($elements) {
             foreach ($elements as $element) {
-                // For API, we might prefer text over rendered HTML, but Contao elements are diverse.
-                // As a fallback for simple API, we concatenate text fields if available.
+                // Collect text content
                 if ($element->type === 'text') {
                     $content .= StringUtil::restoreBasicEntities($element->text) . "\n\n";
+                }
+
+                // Collect images from various content elements
+                if (in_array($element->type, ['image', 'text'], true) && $element->singleSRC) {
+                    $file = FilesModel::findByUuid($element->singleSRC);
+                    if ($file && !in_array($file->path, $images, true)) {
+                        $images[] = $file->path;
+                    }
                 }
             }
         }
@@ -165,6 +178,7 @@ class AppController extends AbstractController
             'teaser' => StringUtil::restoreBasicEntities($item->teaser),
             'text' => $content,
             'image' => $imagePath,
+            'images' => $images,
         ]);
     }
 

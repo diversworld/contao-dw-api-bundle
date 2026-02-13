@@ -144,6 +144,7 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/app/news`: Liste der News aus dem konfigurierten Archiv (inkl. Headline, Teaser und Vorschaubild).
   - Unterstützt Query-Parameter: `archive=[1,2]` (Liste von Archiv-IDs) und `limit=4` (Anzahl der Einträge).
 - `GET /api/app/news/{id}`: Details zu einer News-Meldung.
+  - Enthält nun zusätzlich ein `images` Array mit Pfaden zu allen Bildern aus den Inhaltselementen.
 - `GET /api/app/news/details?id={id}`: Details zu einer News-Meldung via Query-Parameter.
 
 ## Konfiguration
