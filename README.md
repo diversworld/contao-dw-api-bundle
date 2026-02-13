@@ -84,7 +84,9 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `POST /api/tank-checks/book`: Buchung einer TÜV-Prüfung für eine oder mehrere Flaschen.
     - Erwartet JSON mit `proposal_id` und einer Liste von `items` (Flaschendaten und gewählte Artikel-IDs).
   - Optional unterstützt: `notes` auf Buchungsebene sowie `notes` je Item/Flasche.
-  - Beispiel:
+  - **Rückgabe:** Enthält den `total_price` der Buchung sowie eine Liste der `items` mit der berechneten `totalPrice`
+    pro Flasche.
+  - Beispiel Request:
     ```json
     {
       "proposal_id": 12,
@@ -95,9 +97,24 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
           "manufacturer": "Scubatech",
           "bazNumber": "B12345",
           "size": "12",
+          "price": 25.00,
           "o2clean": true,
           "articles": [1, 3, 5],
           "notes": "Ventil klemmt gelegentlich"
+        }
+      ]
+    }
+    ```
+  - Beispiel Response:
+    ```json
+    {
+      "success": true,
+      "booking_number": "B-20260213-140700-123",
+      "total_price": 45.50,
+      "items": [
+        {
+          "serialNumber": "ABC123",
+          "totalPrice": 45.50
         }
       ]
     }
@@ -156,6 +173,14 @@ vorgenommen:
 
 ## Anforderungen
 
-- Contao 5.x
-- PHP 8.1 oder höher
+- Contao 5.3 oder höher (optimiert für Contao 5.7)
+- PHP 8.2 oder höher
 - `diversworld/contao-diveclub-bundle`
+
+## Kompatibilität & Modernisierung
+
+Das Bundle wurde für **Contao 5.7** und **Symfony 7** optimiert:
+
+- **Routing:** Verwendung von PHP 8 Attributen (`#[Route]`) statt Annotationen.
+- **Security:** Nutzung des `UserPasswordHasherInterface` und `IsGranted` Attributen.
+- **String Handling:** Umstellung auf `StringUtil::restoreBasicEntities()` für volle Kompatibilität mit Contao 5+.
