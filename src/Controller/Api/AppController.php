@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\ContentModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\FilesModel;
 use Contao\NewsModel;
@@ -114,6 +115,13 @@ class AppController extends AbstractController
         return new JsonResponse($data);
     }
 
+    #[Route('/news/details', name: 'news_details_query', methods: ['GET'])]
+    public function newsDetailsQuery(Request $request): JsonResponse
+    {
+        $id = (int)$request->query->get('id');
+        return $this->newsDetail($id);
+    }
+
     #[Route('/news/{id}', name: 'news_detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function newsDetail(int $id): JsonResponse
     {
@@ -132,18 +140,30 @@ class AppController extends AbstractController
             }
         }
 
-        // We use text to provide full content. 
-        // Contao stores content elements for news, but also has a 'teaser' field.
-        // If news has content elements, we might need to render them or just return the text field if used.
-        // Usually, news content is rendered via content elements. 
-        // For a simple API, returning the 'teaser' and maybe a main content if available.
+        // Get full content from content elements
+        $content = '';
+        $elements = ContentModel::findPublishedByPidAndTable($item->id, 'tl_news');
+        if ($elements) {
+            foreach ($elements as $element) {
+                // For API, we might prefer text over rendered HTML, but Contao elements are diverse.
+                // As a fallback for simple API, we concatenate text fields if available.
+                if ($element->type === 'text') {
+                    $content .= StringUtil::restoreBasicEntities($element->text) . "\n\n";
+                }
+            }
+        }
+
+        // Use teaser as fallback for text if no content elements were found
+        if (empty(trim($content))) {
+            $content = StringUtil::restoreBasicEntities($item->teaser);
+        }
 
         return new JsonResponse([
             'id' => (int)$item->id,
             'date' => (int)$item->date,
             'headline' => $item->headline,
             'teaser' => StringUtil::restoreBasicEntities($item->teaser),
-            'text' => StringUtil::restoreBasicEntities($item->teaser), // Fallback if no content elements handled
+            'text' => $content,
             'image' => $imagePath,
         ]);
     }
