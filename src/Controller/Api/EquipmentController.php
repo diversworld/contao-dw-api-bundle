@@ -17,6 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class EquipmentController extends AbstractController
 {
     public function __construct(
+        private readonly \Diversworld\ContaoDiveclubBundle\Helper\DcaTemplateHelper $templateHelper,
         private ?ContaoFramework $framework = null
     )
     {
@@ -31,6 +32,11 @@ class EquipmentController extends AbstractController
         if (null === $models) {
             return new JsonResponse([]);
         }
+
+        // Cache for labels
+        $types = $this->templateHelper->getEquipmentFlatTypes();
+        $manufacturers = $this->templateHelper->getManufacturers();
+        $sizes = $this->templateHelper->getSizes();
 
         $data = [];
         foreach ($models as $model) {
@@ -47,6 +53,19 @@ class EquipmentController extends AbstractController
             if (isset($row['rentalFee'])) {
                 $row['rentalFee'] = (float)$row['rentalFee'];
             }
+
+            // Ensure type and subType are included (as requested)
+            // We map them to the names used in ReservationController if they differ
+            $row['types'] = $row['type'] ?? '';
+            $row['sub_type'] = $row['subType'] ?? '';
+
+            // Add Labels
+            $row['type_label'] = $types[$row['type']] ?? '-';
+            $subTypes = $this->templateHelper->getSubTypes((int)$row['type']);
+            $row['sub_type_label'] = $subTypes[$row['subType']] ?? '-';
+            $row['manufacturer_label'] = $manufacturers[$row['manufacturer']] ?? '-';
+            $row['size_label'] = $sizes[$row['size']] ?? '-';
+            $row['status_label'] = $GLOBALS['TL_LANG']['tl_dc_equipment']['itemStatus'][$row['status']] ?? '-';
 
             $data[] = $row;
         }
@@ -77,6 +96,18 @@ class EquipmentController extends AbstractController
         if (isset($row['rentalFee'])) {
             $row['rentalFee'] = (float)$row['rentalFee'];
         }
+
+        // Ensure type and subType are included (as requested)
+        $row['types'] = $row['type'] ?? '';
+        $row['sub_type'] = $row['subType'] ?? '';
+
+        // Add Labels
+        $row['type_label'] = $this->templateHelper->getEquipmentFlatTypes()[$row['type']] ?? '-';
+        $subTypes = $this->templateHelper->getSubTypes((int)$row['type']);
+        $row['sub_type_label'] = $subTypes[$row['subType']] ?? '-';
+        $row['manufacturer_label'] = $this->templateHelper->getManufacturers()[$row['manufacturer']] ?? '-';
+        $row['size_label'] = $this->templateHelper->getSizes()[$row['size']] ?? '-';
+        $row['status_label'] = $GLOBALS['TL_LANG']['tl_dc_equipment']['itemStatus'][$row['status']] ?? '-';
 
         return new JsonResponse($row);
     }

@@ -69,7 +69,13 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 ### Leihausrüstung
 
 - `GET /api/equipment`: Liste der allgemeinen Ausrüstung.
+  - Enthält nun zusätzliche Felder: `types`, `sub_type`, `type_label`, `sub_type_label`, `manufacturer_label`,
+    `size_label` und `status_label`.
 - `GET /api/equipment/{id}`: Details zu einem Ausrüstungsgegenstand.
+  - Enthält nun zusätzliche Felder: `types`, `sub_type`, `type_label`, `sub_type_label`, `manufacturer_label`,
+    `size_label` und `status_label`.
+- `GET /api/equipment/options`: Liste aller verfügbaren Optionen für Ausrüstung (Typen, Hersteller, Größen).
+  - Gibt ein JSON-Objekt mit den Schlüsseln `types`, `manufacturers` und `sizes` zurück.
 - `GET /api/tanks`: Liste der Tauchflaschen.
 - `GET /api/tanks/{id}`: Details zur Flasche.
 - `GET /api/regulators`: Liste der Atemregler.

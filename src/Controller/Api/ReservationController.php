@@ -116,13 +116,21 @@ class ReservationController extends AbstractController
         $reservedFor = (int)($content['reservedFor'] ?? $userId);
         $eventId = (int)($content['event_id'] ?? 0);
 
+        // Titel und Alias analog zu DCA generieren
+        $formattedMemberId = str_pad((string)$userId, 3, '0', STR_PAD_LEFT);
+        $currentDate = date('dmHi');
+        $currentYear = date('Y');
+        $title = $currentYear . '-' . $formattedMemberId . '-' . $currentDate;
+        $alias = 'id-' . $title;
+
         $reservation = new DcReservationModel();
         $reservation->tstamp = time();
         $reservation->setRow([
             'member_id' => $userId,
             'reservedFor' => $reservedFor,
             'event_id' => $eventId,
-            'title' => 'API-' . date('Y-m-d-H-i') . '-' . $userId,
+            'title' => $title,
+            'alias' => $alias,
             'reserved_at' => (string)time(),
             'reservation_status' => 'reserved',
             'published' => '1',
@@ -146,7 +154,9 @@ class ReservationController extends AbstractController
                     'reserved_at' => (string)time(),
                     'reservation_status' => 'reserved',
                     'published' => '1',
-                    'notes' => $itemData['notes'] ?? ''
+                    'notes' => $itemData['notes'] ?? '',
+                    'created_at' => time(),
+                    'updated_at' => time()
                 ]);
             }
         }
