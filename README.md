@@ -39,8 +39,31 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/reservations/{id}`: Details inkl. aller gebuchten Items.
   - Gibt bei Items auch die Timestamps `created_at` und `updated_at` zurück.
 - `POST /api/reservations`: Neue Reservierung erstellen.
-    - Erwartet JSON mit `member_id`, optional `reservedFor`, `asset_type` und einer Liste von `items`.
-  - Bei `items` können zusätzlich `types`, `sub_type` und `notes` übergeben werden.
+  - Erwartet JSON mit `member_id`, optional `reservedFor`, `asset_type` (z.B. `equipment`, `tank`, `regulator`,
+    `multiple`) und einer Liste von `items`.
+  - Bei `items` können zusätzlich `item_id`, `item_type`, `types`, `sub_type` und `notes` übergeben werden.
+  - **Beispiel Request:**
+    ```json
+    {
+      "member_id": 1,
+      "reservedFor": 1,
+      "asset_type": "multiple",
+      "items": [
+        {
+          "item_id": 42,
+          "item_type": "equipment",
+          "types": "jacket",
+          "sub_type": "m",
+          "notes": "Größe M bitte"
+        },
+        {
+          "item_id": 12,
+          "item_type": "tank",
+          "notes": "12L Stahl"
+        }
+      ]
+    }
+    ```
 
 ### Kurse
 
