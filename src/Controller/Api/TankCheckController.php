@@ -8,6 +8,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCheckProposalModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCheckArticlesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCheckBookingModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCheckOrderModel;
+use Diversworld\ContaoDiveclubBundle\Helper\TankCheckHelper;
 use Contao\CalendarEventsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -167,6 +168,7 @@ class TankCheckController extends AbstractController
             }
 
             // Articles as blob/serialized array
+            $articleIds = [];
             if (isset($item['articles']) && is_array($item['articles'])) {
                 // Artikel-IDs auf Integer normalisieren
                 $articleIds = array_values(array_filter(array_map(static function ($v) {
@@ -178,20 +180,22 @@ class TankCheckController extends AbstractController
                 $order->selectedArticles = serialize($articleIds);
             }
 
-            // Calculate price if articles provided
-            $itemPrice = 0;
-            if (isset($articleIds) && is_array($articleIds)) {
-                foreach ($articleIds as $articleId) {
-                    $art = DcCheckArticlesModel::findByPk($articleId);
-                    if ($art) {
-                        $itemPrice += (float)$art->articlePriceBrutto;
-                    }
-                }
+            // Calculate price using Helper
+            $tankSize = (string)($item['size'] ?? '12');
+            $itemPrice = (float) TankCheckHelper::calculateTotalPrice($proposalId, $tankSize, $articleIds);
+
+            // Optional: Wenn der Preis explizit im POST mitgegeben wurde, diesen verwenden (falls abweichend)
+            // oder als Fallback den berechneten Preis nehmen.
+            if (isset($item['price']) && is_numeric($item['price'])) {
+                $itemPrice = (float)$item['price'];
             }
+
             $order->totalPrice = $itemPrice;
             $totalPrice += $itemPrice;
 
-            $order->save();
+            if (!$order->save()) {
+                // Log error if needed
+            }
             $itemResults[] = [
                 'serialNumber' => $order->serialNumber,
                 'totalPrice' => $itemPrice
