@@ -177,12 +177,12 @@ class TankCheckController extends AbstractController
                     }
                     return null;
                 }, $item['articles']), static fn($v) => null !== $v));
-                $order->selectedArticles = serialize($articleIds);
+                $order->selectedArticles = $articleIds; // Contao models handle serialization if it is a blob and multiple is true
             }
 
             // Calculate price using Helper
             $tankSize = (string)($item['size'] ?? '12');
-            $itemPrice = (float) TankCheckHelper::calculateTotalPrice($proposalId, $tankSize, $articleIds);
+            $itemPrice = (float)TankCheckHelper::calculateTotalPrice($proposalId, $tankSize, $articleIds);
 
             // Optional: Wenn der Preis explizit im POST mitgegeben wurde, diesen verwenden (falls abweichend)
             // oder als Fallback den berechneten Preis nehmen.
@@ -190,26 +190,28 @@ class TankCheckController extends AbstractController
                 $itemPrice = (float)$item['price'];
             }
 
-            $order->totalPrice = $itemPrice;
-            $totalPrice += $itemPrice;
+            $order->totalPrice = (float)$itemPrice;
+            $totalPrice += (float)$itemPrice;
 
             if (!$order->save()) {
                 // Log error if needed
             }
+
+            // Refetch or ensure totalPrice is in row for results
             $itemResults[] = [
                 'serialNumber' => $order->serialNumber,
-                'totalPrice' => $itemPrice
+                'totalPrice' => (float)$itemPrice
             ];
         }
 
         // Update total price in booking
-        $booking->totalPrice = $totalPrice;
+        $booking->totalPrice = (float)$totalPrice;
         $booking->save();
 
         return new JsonResponse([
             'success' => true,
             'booking_number' => $booking->bookingNumber,
-            'total_price' => $totalPrice,
+            'total_price' => (float)$totalPrice,
             'items' => $itemResults
         ]);
     }

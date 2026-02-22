@@ -13,6 +13,7 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen de
 - **TÜV-Checks:** Übersicht über anstehende Revisionen und Prüfvorschläge.
 - **App-Konfiguration & News:** Bereitstellung von Logo, Info-Texten und Nachrichten für die iOS-App.
 - **Schüler:** Verwaltung von Kursteilnehmern.
+- **Mitglieder:** Abruf der Mitgliederliste (ID, Nachname, Vorname, E-Mail).
 - **JSON-Format:** Alle Antworten sind für die einfache Integration in iOS optimiert.
 
 ### JSON-Format & Datentypen
@@ -175,6 +176,19 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/app/news/{id}`: Details zu einer News-Meldung.
   - Enthält nun zusätzlich ein `images` Array mit Pfaden zu allen Bildern aus den Inhaltselementen.
 - `GET /api/app/news/details?id={id}`: Details zu einer News-Meldung via Query-Parameter.
+
+### Mitglieder
+
+- `GET /api/members`: Liste aller Mitglieder.
+  - Antwortfelder: `mitglieds_id`, `name` (Nachname), `vorname`, `email`.
+  - Gibt ein leeres Array zurück, wenn die API in der Diveclub-Konfiguration nicht aktiviert ist (`activateApi = true` erforderlich).
+- Beispiel-Response:
+  ```json
+  [
+    {"mitglieds_id": 12, "name": "Muster", "vorname": "Max", "email": "max.muster@example.org"},
+    {"mitglieds_id": 13, "name": "Beispiel", "vorname": "Erika", "email": "erika.beispiel@example.org"}
+  ]
+  ```
 
 ## Konfiguration
 
