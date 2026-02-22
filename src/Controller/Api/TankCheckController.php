@@ -97,8 +97,8 @@ class TankCheckController extends AbstractController
         if ($articles) {
             foreach ($articles as $article) {
                 $row = $article->row();
-                if (isset($row['price'])) {
-                    $row['price'] = (float)$row['price'];
+                if (isset($row['articlePriceBrutto'])) {
+                    $row['price'] = (float)$row['articlePriceBrutto'];
                 }
                 $data['articles'][] = $row;
             }
@@ -184,7 +184,7 @@ class TankCheckController extends AbstractController
                 foreach ($articleIds as $articleId) {
                     $art = DcCheckArticlesModel::findByPk($articleId);
                     if ($art) {
-                        $itemPrice += (float)$art->price;
+                        $itemPrice += (float)$art->articlePriceBrutto;
                     }
                 }
             }

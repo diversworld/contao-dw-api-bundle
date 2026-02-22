@@ -104,7 +104,7 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/regulators`: Liste der Atemregler.
 - `GET /api/regulators/{id}`: Details zum Atemregler.
 
-### Diveclub Verwaltung
+### TÜV Prüfungen
 
 - `GET /api/students`: Liste der registrierten Schüler.
 - `GET /api/students/{id}`: Schülerdetails.
