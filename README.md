@@ -181,7 +181,8 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 - `GET /api/members`: Liste aller Mitglieder.
   - Antwortfelder: `mitglieds_id`, `name` (Nachname), `vorname`, `email`.
-  - Gibt ein leeres Array zurück, wenn die API in der Diveclub-Konfiguration nicht aktiviert ist (`activateApi = true` erforderlich).
+  - Gibt ein leeres Array zurück, wenn die API in der Diveclub-Konfiguration nicht aktiviert ist (`activateApi = true`
+    erforderlich).
 - Beispiel-Response:
   ```json
   [
