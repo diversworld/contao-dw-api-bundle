@@ -64,7 +64,16 @@ class ReservationController extends AbstractController
     public function detail(int $id): JsonResponse
     {
         $this->getFramework()->initialize();
-        $model = DcReservationModel::findByPk($id);
+        $user = $this->security->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
+        $model = DcReservationModel::findOneBy(
+            ['id=?', 'member_id=?'],
+            [$id, (int)$user->id]
+        );
 
         if (null === $model) {
             return new JsonResponse(['error' => 'Reservation not found'], 404);
@@ -78,7 +87,7 @@ class ReservationController extends AbstractController
         }
 
         // Items laden
-        $items = DcReservationItemsModel::findBy('pid', $model->id);
+        $items = DcReservationItemsModel::findByPid($model->id);
         $data['items'] = [];
 
         if ($items) {

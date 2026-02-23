@@ -102,8 +102,10 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
   - Gibt ein JSON-Objekt mit den Schlüsseln `types`, `manufacturers` und `sizes` zurück.
 - `GET /api/tanks`: Liste der Tauchflaschen.
 - `GET /api/tanks/{id}`: Details zur Flasche.
+- `GET /api/tanks/options`: Liste aller verfügbaren Optionen für Tauchflaschen (Größen, Hersteller).
 - `GET /api/regulators`: Liste der Atemregler.
 - `GET /api/regulators/{id}`: Details zum Atemregler.
+- `GET /api/regulator/options`: Liste aller verfügbaren Optionen für Atemregler (Hersteller, Modelle 1. & 2. Stufe).
 
 ### TÜV Prüfungen
 
