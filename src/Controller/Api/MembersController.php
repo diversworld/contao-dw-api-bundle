@@ -17,7 +17,8 @@ class MembersController extends AbstractController
 {
     public function __construct(
         private ?ContaoFramework $framework = null
-    ) {
+    )
+    {
     }
 
     #[Route('/members', name: 'members_list', methods: ['GET'])]
@@ -39,10 +40,10 @@ class MembersController extends AbstractController
         $data = [];
         foreach ($collection as $member) {
             $data[] = [
-                'mitglieds_id' => (int) $member->id,
-                'name' => (string) $member->lastname,
-                'vorname' => (string) $member->firstname,
-                'email' => (string) $member->email,
+                'mitglieds_id' => (int)$member->id,
+                'name' => (string)$member->lastname,
+                'vorname' => (string)$member->firstname,
+                'email' => (string)$member->email,
             ];
         }
 
