@@ -40,7 +40,7 @@ class MembersController extends AbstractController
         $data = [];
         foreach ($collection as $member) {
             $data[] = [
-                'mitglieds_id' => (int)$member->id,
+                'member_id' => (int)$member->id,
                 'name' => (string)$member->lastname,
                 'vorname' => (string)$member->firstname,
                 'email' => (string)$member->email,
