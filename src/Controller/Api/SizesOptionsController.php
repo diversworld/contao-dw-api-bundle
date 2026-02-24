@@ -11,9 +11,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/tanks/options', name: 'api_tanks_options_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
+#[Route('/api/sizes/options', name: 'api_sizes_options_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class TankOptionsController extends AbstractController
+class SizesOptionsController extends AbstractController
 {
     public function __construct(
         private readonly DcaTemplateHelper $templateHelper,
