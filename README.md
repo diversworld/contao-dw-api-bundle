@@ -100,10 +100,26 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
     `size_label` und `status_label`.
 - `GET /api/equipment/options`: Liste aller verfügbaren Optionen für Ausrüstung (Typen, Hersteller, Größen).
   - Gibt ein JSON-Objekt mit den Schlüsseln `types`, `manufacturers` und `sizes` zurück.
-- `GET /api/tanks`: Liste der Tauchflaschen.
-- `GET /api/tanks/{id}`: Details zur Flasche.
+### Tauchflaschen (Tanks)
+
+- `GET /api/tanks`: Liste der verfügbaren Tauchflaschen.
+  - **Sichtbarkeit:** Administratoren sehen alle Flaschen, angemeldete Nutzer ihre eigenen, Gäste nur veröffentlichte Flaschen.
+- `GET /api/tanks/{id}`: Details zu einer bestimmten Flasche.
+  - **Sicherheit:** Nur für Administratoren, den Besitzer oder bei öffentlicher Markierung zugänglich.
+- `POST /api/tanks`: Neue Flasche anlegen.
+  - **Pflichtfelder:** `title`, `serialNumber`, `size`.
+  - **Besonderheit:** Der angemeldete Nutzer wird automatisch als Besitzer (`owner`) gesetzt, falls nicht anders angegeben.
+- `PUT/PATCH /api/tanks/{id}`: Bestehende Flasche aktualisieren.
+  - **Sicherheit:** Nur für Administratoren oder den Besitzer der Flasche erlaubt.
+- `DELETE /api/tanks/{id}`: Flasche löschen.
+  - **Sicherheit:** Nur für Administratoren oder den Besitzer der Flasche erlaubt.
 - `GET /api/tanks/options`: Liste aller verfügbaren Optionen für Tauchflaschen (Größen, Hersteller).
-- `GET /api/regulators`: Liste der Atemregler.
+
+#### Verfügbare Felder beim Speichern (Tanks):
+Folgende Felder können via `POST` oder `PUT/PATCH` übertragen werden:
+`title`, `alias`, `status`, `rentalFee`, `serialNumber`, `manufacturer`, `bazNumber`, `size`, `o2clean`, `owner`, `checkId`, `lastCheckDate`, `nextCheckDate`, `lastOrder`, `addNotes`, `notes`, `published`, `start`, `stop`.
+
+### Atemregler
 - `GET /api/regulators/{id}`: Details zum Atemregler.
 - `GET /api/regulator/options`: Liste aller verfügbaren Optionen für Atemregler (Hersteller, Modelle 1. & 2. Stufe).
 
