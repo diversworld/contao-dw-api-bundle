@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
-use Contao\FrontendUser;
 use Contao\StringUtil;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
