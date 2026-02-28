@@ -26,7 +26,7 @@ class TankController extends AbstractController
     public function list(): JsonResponse
     {
         $this->getFramework()->initialize();
-        
+
         $user = $this->security->getUser();
         if ($this->security->isGranted('ROLE_ADMIN')) {
             $models = DcTanksModel::findAll();
@@ -167,8 +167,8 @@ class TankController extends AbstractController
     private function updateModelWithData(DcTanksModel $model, array $data): void
     {
         $fields = [
-            'title', 'alias', 'status', 'rentalFee', 'serialNumber', 
-            'manufacturer', 'bazNumber', 'size', 'o2clean', 'owner', 
+            'title', 'alias', 'status', 'rentalFee', 'serialNumber',
+            'manufacturer', 'bazNumber', 'size', 'o2clean', 'owner',
             'checkId', 'lastCheckDate', 'nextCheckDate', 'lastOrder',
             'addNotes', 'notes', 'published', 'start', 'stop'
         ];
