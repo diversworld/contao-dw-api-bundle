@@ -1,4 +1,13 @@
+[![Latest Version on Packagist](http://img.shields.io/packagist/v/diversworld/contao-dw-api-bundle.svg?style=flat)](https://packagist.org/packages/diversworld/contao-diveclub-bundle)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiversworld%2Fcontao-dw-api-bundle%2Fmain%2Fcomposer.json&query=%24.require%5B%22contao%2Fcore-bundle%22%5D&label=Contao%20Version)
+[![Installations via composer per month](http://img.shields.io/packagist/dm/diversworld/contao-diveclub-bundle.svg?style=flat)](https://packagist.org/packages/diversworld/contao-dw-api-bundle)
+[![Installations via composer total](http://img.shields.io/packagist/dt/diversworld/contao-diveclub-bundle.svg?style=flat)](https://packagist.org/packages/diversworld/contao-dw-api-bundle)
+![Packagist License](https://img.shields.io/packagist/l/diversworld/contao-diveclub-bundle)
+
+![Diversworld](docs/dw-logo-k.png "Diversworld Logo")
+
 ![Alt text](docs/dw-logo-kws.png?raw=true "Diversworld")
+
 
 # Contao Diveclub API Bundle
 
