@@ -1,6 +1,6 @@
 {
     "name": "diversworld/contao-dw-api-bundle",
-    "description": "API-Bundle für den Contao Diveclub Manager zur Kommunikation mit der iOS-App. Ermöglicht die Verwaltung von Events, Reservierungen, Ausrüstung und Kursfortschritten.",
+    "description": "API-Bundle für den Contao Diveclub Manager zur Kommunikation mit der iOS-App (https://apps.apple.com/de/app/diveclub-manager/id6759004094). Ermöglicht die Verwaltung von Events, Reservierungen, Ausrüstung und Kursfortschritten.",
     "keywords": [
         "contao",
         "contao-bundle",
