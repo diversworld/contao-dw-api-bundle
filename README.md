@@ -6,7 +6,6 @@
 
 ![Diversworld](docs/dw-logo-k.png "Diversworld Logo")
 
-![Alt text](docs/dw-logo-kws.png?raw=true "Diversworld")
 
 iOS App https://apps.apple.com/de/app/diveclub-manager/id6759004094
 
