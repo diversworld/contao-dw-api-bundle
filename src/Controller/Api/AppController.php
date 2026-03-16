@@ -85,7 +85,17 @@ class AppController extends AbstractController
         }
 
         $limit = (int)$request->query->get('limit', 0);
-        $news = NewsModel::findPublishedByPids($pids, null, $limit);
+        $time = time();
+        $news = NewsModel::findBy(
+            [
+                "tl_news.pid IN(" . implode(',', array_map('intval', $pids)) . ")",
+                "tl_news.published='1'",
+                "(tl_news.start='' OR tl_news.start<=$time)",
+                "(tl_news.stop='' OR tl_news.stop>$time)"
+            ],
+            null,
+            ['limit' => $limit, 'order' => 'tl_news.date DESC']
+        );
 
         if (!$news) {
             return new JsonResponse([]);
@@ -126,9 +136,18 @@ class AppController extends AbstractController
     public function newsDetail(int $id): JsonResponse
     {
         $this->getFramework()->initialize();
-        $item = NewsModel::findByPk($id);
+        $time = time();
+        $item = NewsModel::findBy(
+            [
+                'tl_news.id=?',
+                'tl_news.published=1',
+                "(tl_news.start='' OR tl_news.start<=$time)",
+                "(tl_news.stop='' OR tl_news.stop>$time)"
+            ],
+            [$id]
+        );
 
-        if (!$item || !$item->published) {
+        if (!$item) {
             return new JsonResponse(['error' => 'News not found'], 404);
         }
 
