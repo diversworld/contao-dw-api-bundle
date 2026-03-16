@@ -4,12 +4,14 @@
 [![Installations via composer total](http://img.shields.io/packagist/dt/diversworld/contao-dw-api-bundle.svg?style=flat)](https://packagist.org/packages/diversworld/contao-dw-api-bundle)
 ![Packagist License](https://img.shields.io/packagist/l/diversworld/contao-dw-api-bundle)
 
-![Alt text](docs/dw-logo-kws.png?raw=true "Diversworld")
+![Diversworld](docs/dw-logo-k.png "Diversworld Logo")
+
+
+iOS App https://apps.apple.com/de/app/diveclub-manager/id6759004094
 
 # Contao Diveclub API Bundle
 
-API Bundle für die Kommunikation zwischen Contao und einer iOS
-App ([im AppStore](https://apps.apple.com/de/app/diveclub-manager/id6759004094)) im Rahmen des Diveclub Managers.
+API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen des Diveclub Managers.
 
 ## Features
 
@@ -262,7 +264,3 @@ Das Bundle wurde für **Contao 5.7** und **Symfony 7** optimiert:
   `attribute` im `ContaoManager` Plugin wird die Kompatibilität mit Contao 5.3+ sichergestellt.
 - **Security:** Nutzung des `UserPasswordHasherInterface` und `IsGranted` Attributen.
 - **String Handling:** Umstellung auf `StringUtil::restoreBasicEntities()` für volle Kompatibilität mit Contao 5+.
-
-[Donation for Diversworld DiveClubManager API](https://paypal.me/EckhardBecker615)
-
-Thank You!
