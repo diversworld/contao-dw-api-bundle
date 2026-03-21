@@ -113,8 +113,14 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 ### Tauchflaschen (Tanks)
 
 - `GET /api/tanks`: Liste der verfügbaren Tauchflaschen.
-  - **Sichtbarkeit:** Administratoren sehen alle Flaschen, angemeldete Nutzer ihre eigenen, Gäste nur veröffentlichte
+  - **Sichtbarkeit:** Administratoren sehen alle Flaschen. Angemeldete Nutzer sehen ihre eigenen Flaschen (Status
+    `owned`) sowie alle veröffentlichten Flaschen mit dem Status `available`. Gäste sehen alle veröffentlichten
     Flaschen.
+  - **Filterung:** Unterstützt den Query-Parameter `status`.
+    - `status=available`: Liefert alle veröffentlichten Flaschen mit dem Status `available` (z. B. für die
+      Equipment-Auswahl).
+    - `status=owned`: Liefert alle Flaschen mit dem Status `owned`, die dem aktuell angemeldeten Mitglied gehören (z. B.
+      für TÜV-Reservierungen). Erfordert Authentifizierung.
 - `GET /api/tanks/{id}`: Details zu einer bestimmten Flasche.
   - **Sicherheit:** Nur für Administratoren, den Besitzer oder bei öffentlicher Markierung zugänglich.
 - `POST /api/tanks`: Neue Flasche anlegen.

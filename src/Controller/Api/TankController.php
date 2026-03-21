@@ -23,15 +23,25 @@ class TankController extends AbstractController
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
 
         $user = $this->security->getUser();
-        if ($this->security->isGranted('ROLE_ADMIN')) {
+        $status = $request->query->get('status');
+
+        if ($status === 'available') {
+            $models = DcTanksModel::findBy(['published=?', 'status=?'], [1, 'available']);
+        } elseif ($status === 'owned') {
+            if (!$user) {
+                return new JsonResponse(['error' => 'Not authenticated'], 401);
+            }
+            $models = DcTanksModel::findBy(['owner=?', 'status=?'], [$user->id, 'owned']);
+        } elseif ($this->security->isGranted('ROLE_ADMIN')) {
             $models = DcTanksModel::findAll();
         } elseif ($user) {
-            $models = DcTanksModel::findBy('owner', $user->id);
+            // Für angemeldete Mitglieder: Eigene Tanks UND alle als "verfügbar" veröffentlichten Tanks laden
+            $models = DcTanksModel::findBy(['(owner=? OR (published=? AND status=?))'], [$user->id, 1, 'available']);
         } else {
             $models = DcTanksModel::findPublished();
         }
