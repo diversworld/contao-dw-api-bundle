@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\FilesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventScheduleModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
@@ -73,6 +74,14 @@ class EventController extends AbstractController
         foreach (['tstamp', 'startDate', 'endDate', 'dateStart', 'dateEnd', 'start', 'stop'] as $field) {
             if (isset($data[$field]) && $data[$field] !== '') {
                 $data[$field] = (int)$data[$field];
+            }
+        }
+
+        $data['imagePath'] = '';
+        if ($model->addImage && $model->singleSRC) {
+            $file = FilesModel::findByUuid($model->singleSRC);
+            if ($file) {
+                $data['imagePath'] = $file->path;
             }
         }
 
