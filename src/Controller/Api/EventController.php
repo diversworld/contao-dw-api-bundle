@@ -77,11 +77,11 @@ class EventController extends AbstractController
             }
         }
 
-        $data['imagePath'] = '';
+        $data['image'] = '';
         if ($model->addImage && $model->singleSRC) {
             $file = FilesModel::findByUuid($model->singleSRC);
             if ($file) {
-                $data['imagePath'] = $file->path;
+                $data['image'] = $file->path;
             }
         }
 
