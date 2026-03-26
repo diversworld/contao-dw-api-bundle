@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FilesModel;
+use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventScheduleModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
@@ -13,7 +14,6 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\StringUtil;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/events', name: 'api_events_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
@@ -137,7 +137,7 @@ class EventController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get(ContaoFramework::class);
         }
 
         return $this->framework;
