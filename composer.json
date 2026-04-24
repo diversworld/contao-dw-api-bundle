@@ -30,7 +30,7 @@
         "php": "^8.2",
         "contao/core-bundle": "^5.3",
         "symfony/security-bundle": "^6.4 || ^7.0",
-        "diversworld/contao-diveclub-bundle": "dev-main"
+        "diversworld/contao-diveclub-bundle": "^3.4"
     },
     "require-dev": {
         "contao/easy-coding-standard": "^6.13",
