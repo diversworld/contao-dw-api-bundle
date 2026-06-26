@@ -6,18 +6,14 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcRegulatorsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/regulators', name: 'api_regulators_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class RegulatorController extends AbstractController
+class RegulatorController
 {
-    public function __construct(
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -79,7 +75,7 @@ class RegulatorController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;

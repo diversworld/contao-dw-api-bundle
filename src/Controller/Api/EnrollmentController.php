@@ -9,7 +9,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,20 +17,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/enrollments', name: 'api_enrollments_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class EnrollmentController extends AbstractController
+class EnrollmentController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -68,9 +64,18 @@ class EnrollmentController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

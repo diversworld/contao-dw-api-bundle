@@ -16,6 +16,7 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen de
 ## Features
 
 - **Events:** Abfrage von Tauchkursen und Terminen.
+- **Event-Terminpläne:** Eigener Endpunkt für den vollständigen Zeitplan einer Kursveranstaltung.
 - **Reservierungen:** Verwaltung von Buchungen (Ansehen und Erstellen).
 - **Ausrüstung:** Zugriff auf Leihausrüstung (Jackets, Anzüge, etc.).
 - **Tauchflaschen & Atemregler:** Spezielle Endpunkte für Flaschen und Regler.
@@ -23,6 +24,7 @@ API Bundle für die Kommunikation zwischen Contao und einer iOS App im Rahmen de
 - **App-Konfiguration & News:** Bereitstellung von Logo, Info-Texten und Nachrichten für die iOS-App.
 - **Schüler:** Verwaltung von Kursteilnehmern.
 - **Mitglieder:** Abruf der Mitgliederliste (ID, Nachname, Vorname, E-Mail).
+- **Instruktoren & Dashboard:** Freigaben für Kursanmeldungen, Fortschrittsdaten und Trainingsmanager-Dashboard.
 - **JSON-Format:** Alle Antworten sind für die einfache Integration in iOS optimiert.
 
 ### JSON-Format & Datentypen
@@ -42,6 +44,9 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 - `GET /api/events`: Liste aller Kurse/Events.
 - `GET /api/events/{id}`: Details zu einem bestimmten Event.
+- `GET /api/events/{id}/schedule`: Vollständiger Terminplan einer Kursveranstaltung.
+    - Enthält alle Datensätze aus `tl_dc_course_event_schedule`.
+    - Ergänzt je Termin zusätzlich den aufgelösten `module_title`.
 
 ### Reservierungen
 
@@ -88,6 +93,18 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 ### Instruktoren
 
+- `GET /api/instructor/dashboard`: Dashboard für den konfigurierten Trainingsmanager.
+    - Liefert zwei Hauptbereiche:
+        - `courses`: Liste aller veröffentlichten Kursveranstaltungen mit Kursname, Zeitraum, Instruktor und allen
+          zugeordneten Schülern.
+        - `workload`: Aggregierte Anzahl der Veranstaltungen pro Instruktor.
+    - Jeder Schüler-Eintrag enthält u. a.:
+        - `name`
+        - `status`
+        - `progress` (Prozent)
+        - `completed` / `total`
+        - `details` mit Modulen und Übungsstatus
+    - Zugriff nur für das in `tl_dc_config.training_manager` konfigurierte Mitglied.
 - `PATCH /api/instructor/approve/{id}`: Kursanmeldung eines Schülers genehmigen (Status auf `active` setzen).
 - `PATCH /api/instructor/reject/{id}`: Kursanmeldung eines Schülers ablehnen (Status auf `dropped` setzen).
 
@@ -109,6 +126,8 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
     `size_label` und `status_label`.
 - `GET /api/equipment/options`: Liste aller verfügbaren Optionen für Ausrüstung (Typen, Hersteller, Größen).
   - Gibt ein JSON-Objekt mit den Schlüsseln `types`, `manufacturers` und `sizes` zurück.
+- `GET /api/sizes/options`: Reduzierter Options-Endpunkt für Größen und Hersteller.
+    - Gibt ein JSON-Objekt mit den Schlüsseln `sizes` und `manufacturers` zurück.
 
 ### Tauchflaschen (Tanks)
 
@@ -140,6 +159,8 @@ Folgende Felder können via `POST` oder `PUT/PATCH` übertragen werden:
 `checkId`, `lastCheckDate`, `nextCheckDate`, `lastOrder`, `addNotes`, `notes`, `published`, `start`, `stop`.
 
 ### Atemregler
+
+- `GET /api/regulators`: Liste aller Atemregler.
 - `GET /api/regulators/{id}`: Details zum Atemregler.
 - `GET /api/regulator/options`: Liste aller verfügbaren Optionen für Atemregler (Hersteller, Modelle 1. & 2. Stufe).
 
@@ -192,18 +213,27 @@ Folgende Felder können via `POST` oder `PUT/PATCH` übertragen werden:
 
 - `POST /api/login`: Login für Frontend-Benutzer.
     - Erwartet JSON mit `username` und `password`.
-  - Gibt bei Erfolg Benutzerdaten inkl. `role` zurück.
+  - Gibt bei Erfolg Benutzerdaten inkl. `role` und `isTrainingManager` zurück.
   - Prüft, ob die API in der `tl_dc_config` aktiviert wurde.
 - `POST /api/logout`: Logout für Frontend-Benutzer.
     - Beendet die aktuelle Session.
-- `GET /api/me`: Aktuelle Benutzerdaten inkl. `role` abrufen.
+- `GET /api/me`: Aktuelle Benutzerdaten inkl. `role` und `isTrainingManager` abrufen.
     - Erfordert eine aktive Session.
 - `PATCH /api/me`: Eigene Benutzerdaten aktualisieren.
     - Erwartet JSON mit den zu ändernden Feldern (z.B. `firstname`, `lastname`, `email`, etc.).
     - Erfordert eine aktive Session.
-- `PATCH /api/password`: Passwort ändern.
+- `PATCH /api/me/password`: Passwort ändern.
     - Erwartet JSON mit `currentPassword` und `newPassword`.
     - Erfordert eine aktive Session.
+
+Die Rolle `role` in den Antworten von `POST /api/login` und `GET /api/me` wird aus den in
+`tl_dc_config.instructor_groups`
+konfigurierten Frontend-Gruppen ermittelt. Mitglieder aus diesen Gruppen erhalten die Rolle `instructor`, alle anderen
+`member`.
+
+Das Feld `isTrainingManager` ist `true`, wenn die angemeldete Person der in `tl_dc_config.training_manager`
+konfigurierte
+Training Manager ist.
 
 ### App & News
 
@@ -218,14 +248,14 @@ Folgende Felder können via `POST` oder `PUT/PATCH` übertragen werden:
 ### Mitglieder
 
 - `GET /api/members`: Liste aller Mitglieder.
-  - Antwortfelder: `mitglieds_id`, `name` (Nachname), `vorname`, `email`.
+    - Antwortfelder: `member_id`, `name` (Nachname), `vorname`, `email`.
   - Gibt ein leeres Array zurück, wenn die API in der Diveclub-Konfiguration nicht aktiviert ist (`activateApi = true`
     erforderlich).
 - Beispiel-Response:
   ```json
   [
-    {"mitglieds_id": 12, "name": "Muster", "vorname": "Max", "email": "max.muster@example.org"},
-    {"mitglieds_id": 13, "name": "Beispiel", "vorname": "Erika", "email": "erika.beispiel@example.org"}
+    {"member_id": 12, "name": "Muster", "vorname": "Max", "email": "max.muster@example.org"},
+    {"member_id": 13, "name": "Beispiel", "vorname": "Erika", "email": "erika.beispiel@example.org"}
   ]
   ```
 
@@ -241,6 +271,9 @@ vorgenommen:
 - **Datenschutzhinweise (App):** Hinweise zum Datenschutz für die App.
 - **Nutzungsbedingungen (App):** Nutzungsbedingungen/AGB für die App.
 - **News-Archiv:** Auswahl des Archivs, das in der App angezeigt werden soll.
+- **Instruktor-Gruppen:** Grundlage für die Rollenermittlung `instructor` in Login- und Profil-Endpunkten.
+- **Training Manager:** Dieses Mitglied erhält Zugriff auf `/api/instructor/dashboard` sowie auf die Freigabe- und
+  Ablehnungsaktionen für Kursanmeldungen.
 
 ## Installation
 

@@ -16,7 +16,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCourseModulesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseExercisesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentExercisesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,14 +24,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/instructor', name: 'api_instructor_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class InstructorController extends AbstractController
+class InstructorController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
+
 
     #[Route('/dashboard', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): JsonResponse
@@ -41,60 +37,83 @@ class InstructorController extends AbstractController
             return new JsonResponse(['error' => 'Forbidden: Training Manager role required'], 403);
         }
 
-        $events = DcCourseEventModel::findBy(['published=?'], ['1'], ['order' => 'dateStart DESC']);
+        $config = DcConfigModel::findOneBy('published', '1');
+        $options = $config ? StringUtil::deserialize($config->dashboard_options, true) : [];
+
         $result = [];
+        if (in_array('courses', $options, true)) {
+            $events = DcCourseEventModel::findBy(['published=?'], ['1'], ['order' => 'dateStart DESC']);
 
-        if ($events !== null) {
-            foreach ($events as $event) {
-                $course = DcDiveCourseModel::findByPk($event->course_id);
-                $instructor = MemberModel::findByPk($event->instructor);
+            if ($events !== null) {
+                foreach ($events as $event) {
+                    $course = DcDiveCourseModel::findByPk($event->course_id);
+                    $instructor = MemberModel::findByPk($event->instructor);
 
-                $studentsData = $this->loadStudentsForEvent((int)$event->id, (int)$event->course_id);
+                    $studentsData = $this->loadStudentsForEvent((int)$event->id, (int)$event->course_id);
 
-                $result[] = [
-                    'id' => (int)$event->id,
-                    'title' => $event->title,
-                    'course_title' => $course ? $course->title : '',
-                    'dateStart' => (int)$event->dateStart,
-                    'dateEnd' => (int)$event->dateEnd,
-                    'instructor_id' => (int)$event->instructor,
-                    'instructor_name' => $instructor ? trim($instructor->firstname . ' ' . $instructor->lastname) : '',
-                    'students' => $studentsData
-                ];
+                    $result[] = [
+                        'id' => (int)$event->id,
+                        'title' => $event->title,
+                        'course_title' => $course ? $course->title : '',
+                        'dateStart' => (int)$event->dateStart,
+                        'dateEnd' => (int)$event->dateEnd,
+                        'instructor_id' => (int)$event->instructor,
+                        'instructor_name' => $instructor ? trim($instructor->firstname . ' ' . $instructor->lastname) : '',
+                        'students' => $studentsData
+                    ];
+                }
             }
         }
 
         $workload = [];
-        foreach ($result as $event) {
-            $name = $event['instructor_name'] ?: 'Nicht zugewiesen';
-            if (!isset($workload[$name])) {
-                $workload[$name] = 0;
+        if (in_array('workload', $options, true)) {
+            // Use result from courses if already loaded, otherwise load minimal data
+            $eventsForWorkload = $result;
+            if (empty($eventsForWorkload) && !in_array('courses', $options, true)) {
+                $events = DcCourseEventModel::findBy(['published=?'], ['1']);
+                if ($events !== null) {
+                    foreach ($events as $event) {
+                        $instructor = MemberModel::findByPk($event->instructor);
+                        $eventsForWorkload[] = [
+                            'instructor_name' => $instructor ? trim($instructor->firstname . ' ' . $instructor->lastname) : '',
+                        ];
+                    }
+                }
             }
-            $workload[$name]++;
+
+            foreach ($eventsForWorkload as $event) {
+                $name = $event['instructor_name'] ?: 'Nicht zugewiesen';
+                if (!isset($workload[$name])) {
+                    $workload[$name] = 0;
+                }
+                $workload[$name]++;
+            }
         }
 
         return new JsonResponse([
             'courses' => $result,
-            'workload' => $workload
+            'workload' => $workload,
+            'options' => $options
         ]);
     }
 
     private function isTrainingManager(): bool
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user instanceof FrontendUser) {
             return false;
         }
 
         $config = DcConfigModel::findOneBy('published', '1');
-
-        if ($config !== null && (int)$config->training_manager === (int)$user->id) {
-            return true;
+        if ($config === null) {
+            return false;
         }
 
-        return false;
+        $trainingManagers = StringUtil::deserialize($config->training_manager, true);
+
+        return in_array((int)$user->id, array_map('intval', $trainingManagers), true);
     }
 
     private function loadStudentsForEvent(int $eventId, int $courseId): array
@@ -223,7 +242,7 @@ class InstructorController extends AbstractController
     private function isInstructor(): bool
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user instanceof FrontendUser) {
             return false;
@@ -253,9 +272,14 @@ class InstructorController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        return System::getContainer()->get('security.helper');
     }
 }

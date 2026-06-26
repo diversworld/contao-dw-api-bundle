@@ -8,18 +8,13 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\MemberModel;
 use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api', name: 'api_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class MembersController extends AbstractController
+class MembersController
 {
-    public function __construct(
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
 
     #[Route('/members', name: 'members_list', methods: ['GET'])]
     public function members(): JsonResponse
@@ -53,7 +48,7 @@ class MembersController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;

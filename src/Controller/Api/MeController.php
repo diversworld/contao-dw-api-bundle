@@ -6,31 +6,27 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\MemberModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
+use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/me', name: 'api_me_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class MeController extends AbstractController
+class MeController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'me', methods: ['GET'])]
     public function me(): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -50,6 +46,7 @@ class MeController extends AbstractController
             'dateOfBirth' => (int)$user->dateOfBirth,
             'memberGroups' => array_map('intval', \Contao\StringUtil::deserialize($user->groups, true)),
             'role' => $this->getMemberRole($user),
+            'isTrainingManager' => $this->isTrainingManager($user),
         ]);
     }
 
@@ -82,11 +79,30 @@ class MeController extends AbstractController
         return 'member';
     }
 
+    private function isTrainingManager($user): bool
+    {
+        $this->getFramework()->initialize();
+
+        if (!$user instanceof \Contao\FrontendUser) {
+            return false;
+        }
+
+        $config = DcConfigModel::findOneBy('published', '1');
+
+        if (null === $config) {
+            return false;
+        }
+
+        $trainingManagers = \Contao\StringUtil::deserialize($config->training_manager, true);
+
+        return in_array((int)$user->id, array_map('intval', $trainingManagers), true);
+    }
+
     #[Route('', name: 'update', methods: ['PATCH'])]
     public function update(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user instanceof \Contao\FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -124,13 +140,10 @@ class MeController extends AbstractController
     }
 
     #[Route('/password', name: 'change_password', methods: ['PATCH'])]
-    public function changePassword(
-        Request $request,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse
+    public function changePassword(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
-        $frontendUser = $this->security->getUser();
+        $frontendUser = $this->getSecurity()->getUser();
 
         if (!$frontendUser instanceof PasswordAuthenticatedUserInterface) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -146,7 +159,11 @@ class MeController extends AbstractController
         }
 
         // Aktuellen User validieren
-        if (!$passwordHasher->isPasswordValid($frontendUser, $current)) {
+        $passwordHasher = System::getContainer()
+            ->get('security.password_hasher_factory')
+            ->getPasswordHasher(\Contao\FrontendUser::class);
+
+        if (!$passwordHasher->verify((string)$frontendUser->password, (string)$current)) {
             return new JsonResponse(['error' => 'Current password incorrect'], 400);
         }
 
@@ -158,7 +175,7 @@ class MeController extends AbstractController
         }
 
         // Passwort korrekt hashen
-        $hashedPassword = $passwordHasher->hashPassword($frontendUser, $new);
+        $hashedPassword = $passwordHasher->hash((string)$new);
 
         $memberModel->password = $hashedPassword;
         $memberModel->save();
@@ -169,9 +186,18 @@ class MeController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

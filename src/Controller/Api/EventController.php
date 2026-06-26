@@ -12,18 +12,13 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseModulesModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\StringUtil;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/events', name: 'api_events_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class EventController extends AbstractController
+class EventController
 {
-    public function __construct(
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -137,7 +132,7 @@ class EventController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;

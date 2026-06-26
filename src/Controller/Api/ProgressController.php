@@ -12,7 +12,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcStudentExercisesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseExercisesModel;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,14 +21,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/progress', name: 'api_progress_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class ProgressController extends AbstractController
+class ProgressController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     /**
      * Get progress for the current logged in user (student view)
@@ -37,7 +33,7 @@ class ProgressController extends AbstractController
     public function studentProgress(): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
@@ -136,7 +132,7 @@ class ProgressController extends AbstractController
     public function instructorStudents(): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
@@ -256,7 +252,7 @@ class ProgressController extends AbstractController
     {
         $this->getFramework()->initialize();
         // Simple instructor check: Is logged in?
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         $exercise = DcStudentExercisesModel::findByPk($exerciseId);
         if (!$exercise) {
@@ -293,9 +289,18 @@ class ProgressController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

@@ -6,28 +6,24 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcTanksModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\SecurityBundle\Security;
 
 #[Route('/api/tanks', name: 'api_tanks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class TankController extends AbstractController
+class TankController
 {
-    public function __construct(
-        private Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
 
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
         $status = $request->query->get('status');
 
         if ($status === 'available') {
@@ -37,7 +33,7 @@ class TankController extends AbstractController
                 return new JsonResponse(['error' => 'Not authenticated'], 401);
             }
             $models = DcTanksModel::findBy(['owner=?', 'status=?'], [$user->id, 'owned']);
-        } elseif ($this->security->isGranted('ROLE_ADMIN')) {
+        } elseif ($this->getSecurity()->isGranted('ROLE_ADMIN')) {
             $models = DcTanksModel::findAll();
         } elseif ($user) {
             // Für angemeldete Mitglieder: Eigene Tanks UND alle als "verfügbar" veröffentlichten Tanks laden
@@ -78,8 +74,8 @@ class TankController extends AbstractController
         }
 
         // Security check: Only owner or admin can see details (except if it's public)
-        $user = $this->security->getUser();
-        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->getSecurity()->getUser();
+        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             if (!$model->published) {
                 return new JsonResponse(['error' => 'Access denied'], 403);
             }
@@ -113,7 +109,7 @@ class TankController extends AbstractController
         }
 
         // Auto-assign owner if logged in and not provided
-        if (empty($data['owner']) && ($user = $this->security->getUser())) {
+        if (empty($data['owner']) && ($user = $this->getSecurity()->getUser())) {
             $data['owner'] = $user->id;
         }
 
@@ -136,8 +132,8 @@ class TankController extends AbstractController
         }
 
         // Security check: Only owner or admin can update
-        $user = $this->security->getUser();
-        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->getSecurity()->getUser();
+        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
@@ -164,8 +160,8 @@ class TankController extends AbstractController
         }
 
         // Security check: Only owner or admin can delete
-        $user = $this->security->getUser();
-        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->getSecurity()->getUser();
+        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
@@ -193,9 +189,18 @@ class TankController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

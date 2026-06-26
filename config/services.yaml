@@ -11,7 +11,12 @@ services:
         resource: ../src/
         exclude: ../src/{DependencyInjection,Model,Session}
 
-    # Add a session bag
+    Diversworld\ContaoDwApiBundle\Controller\:
+      resource: ../src/Controller/
+      public: true
+      tags: [ 'controller.service_arguments' ]
+
+  # Add a session bag
     diversworld.contao_dw_api_bundle.session.factory:
         class: Diversworld\ContaoDwApiBundle\Session\SessionFactory
         decorates: session.factory

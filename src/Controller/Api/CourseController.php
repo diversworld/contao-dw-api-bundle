@@ -6,10 +6,10 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\StringUtil;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,14 +18,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/courses', name: 'api_courses_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class CourseController extends AbstractController
+class CourseController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -86,7 +82,7 @@ class CourseController extends AbstractController
     public function enroll(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
@@ -142,9 +138,18 @@ class CourseController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

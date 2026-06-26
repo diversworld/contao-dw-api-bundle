@@ -7,8 +7,8 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\System;
 use Doctrine\DBAL\Connection;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,21 +17,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/reservations', name: 'api_reservations_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class ReservationController extends AbstractController
+class ReservationController
 {
-    public function __construct(
-        private readonly Security $security,
-        private readonly Connection $db,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?Connection $db = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -64,7 +60,7 @@ class ReservationController extends AbstractController
     public function detail(int $id): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -109,7 +105,7 @@ class ReservationController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -153,7 +149,7 @@ class ReservationController extends AbstractController
         // Items verarbeiten
         if (isset($content['items']) && is_array($content['items'])) {
             foreach ($content['items'] as $itemData) {
-                $this->db->insert('tl_dc_reservation_items', [
+                $this->getDb()->insert('tl_dc_reservation_items', [
                     'pid' => $reservation->id,
                     'tstamp' => time(),
                     'item_id' => (int)($itemData['item_id'] ?? 0),
@@ -176,9 +172,27 @@ class ReservationController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
+    }
+
+    private function getDb(): Connection
+    {
+        if (null === $this->db) {
+            $this->db = System::getContainer()->get('doctrine.dbal.default_connection');
+        }
+
+        return $this->db;
     }
 }

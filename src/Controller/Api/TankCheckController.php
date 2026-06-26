@@ -11,7 +11,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCheckOrderModel;
 use Diversworld\ContaoDiveclubBundle\Helper\TankCheckHelper;
 use Contao\CalendarEventsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,14 +19,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/tank-checks', name: 'api_tank_checks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class TankCheckController extends AbstractController
+class TankCheckController
 {
-    public function __construct(
-        private readonly Security $security,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?Security $security = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -113,7 +109,7 @@ class TankCheckController extends AbstractController
     public function book(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
-        $user = $this->security->getUser();
+        $user = $this->getSecurity()->getUser();
         $content = json_decode($request->getContent(), true);
 
         if (!$content || !isset($content['proposal_id'], $content['items'])) {
@@ -219,9 +215,18 @@ class TankCheckController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = System::getContainer()->get('security.helper');
+        }
+
+        return $this->security;
     }
 }

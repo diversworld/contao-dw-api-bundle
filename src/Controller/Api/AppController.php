@@ -11,19 +11,14 @@ use Contao\NewsModel;
 use Contao\StringUtil;
 use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/app', name: 'api_app_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-class AppController extends AbstractController
+class AppController
 {
-    public function __construct(
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
 
     #[Route('/config', name: 'config', methods: ['GET'])]
     public function config(): JsonResponse
@@ -51,6 +46,7 @@ class AppController extends AbstractController
             'imprint' => StringUtil::restoreBasicEntities($config->apiImprint),
             'privacy' => StringUtil::restoreBasicEntities($config->apiPrivacy),
             'terms' => StringUtil::restoreBasicEntities($config->apiTerms),
+            'dashboardOptions' => StringUtil::deserialize($config->dashboard_options, true),
         ]);
     }
 
@@ -204,7 +200,7 @@ class AppController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;

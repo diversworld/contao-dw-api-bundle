@@ -4,24 +4,20 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Diversworld\ContaoDiveclubBundle\Helper\DcaTemplateHelper;
 use Diversworld\ContaoDiveclubBundle\Model\DcEquipmentModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/equipment', name: 'api_equipment_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 #[IsGranted('ROLE_MEMBER')]
-class EquipmentController extends AbstractController
+class EquipmentController
 {
-    public function __construct(
-        private readonly \Diversworld\ContaoDiveclubBundle\Helper\DcaTemplateHelper $templateHelper,
-        private ?ContaoFramework $framework = null
-    )
-    {
-    }
+    private ?DcaTemplateHelper $templateHelper = null;
+    private ?ContaoFramework $framework = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
@@ -34,9 +30,10 @@ class EquipmentController extends AbstractController
         }
 
         // Cache for labels
-        $types = $this->templateHelper->getEquipmentFlatTypes();
-        $manufacturers = $this->templateHelper->getManufacturers();
-        $sizes = $this->templateHelper->getSizes();
+        $templateHelper = $this->getTemplateHelper();
+        $types = $templateHelper->getEquipmentFlatTypes();
+        $manufacturers = $templateHelper->getManufacturers();
+        $sizes = $templateHelper->getSizes();
 
         $data = [];
         foreach ($models as $model) {
@@ -61,7 +58,7 @@ class EquipmentController extends AbstractController
 
             // Add Labels
             $row['type_label'] = $types[$row['type']] ?? '-';
-            $subTypes = $this->templateHelper->getSubTypes((int)$row['type']);
+            $subTypes = $templateHelper->getSubTypes((int)$row['type']);
             $row['sub_type_label'] = $subTypes[$row['subType']] ?? '-';
             $row['manufacturer_label'] = $manufacturers[$row['manufacturer']] ?? '-';
             $row['size_label'] = $sizes[$row['size']] ?? '-';
@@ -102,11 +99,12 @@ class EquipmentController extends AbstractController
         $row['sub_type'] = $row['subType'] ?? '';
 
         // Add Labels
-        $row['type_label'] = $this->templateHelper->getEquipmentFlatTypes()[$row['type']] ?? '-';
-        $subTypes = $this->templateHelper->getSubTypes((int)$row['type']);
+        $templateHelper = $this->getTemplateHelper();
+        $row['type_label'] = $templateHelper->getEquipmentFlatTypes()[$row['type']] ?? '-';
+        $subTypes = $templateHelper->getSubTypes((int)$row['type']);
         $row['sub_type_label'] = $subTypes[$row['subType']] ?? '-';
-        $row['manufacturer_label'] = $this->templateHelper->getManufacturers()[$row['manufacturer']] ?? '-';
-        $row['size_label'] = $this->templateHelper->getSizes()[$row['size']] ?? '-';
+        $row['manufacturer_label'] = $templateHelper->getManufacturers()[$row['manufacturer']] ?? '-';
+        $row['size_label'] = $templateHelper->getSizes()[$row['size']] ?? '-';
         $row['status_label'] = $GLOBALS['TL_LANG']['tl_dc_equipment']['itemStatus'][$row['status']] ?? '-';
 
         return new JsonResponse($row);
@@ -115,9 +113,21 @@ class EquipmentController extends AbstractController
     private function getFramework(): ContaoFramework
     {
         if (null === $this->framework) {
-            $this->framework = \Contao\System::getContainer()->get(ContaoFramework::class);
+            $this->framework = System::getContainer()->get('contao.framework');
         }
 
         return $this->framework;
+    }
+
+    private function getTemplateHelper(): DcaTemplateHelper
+    {
+        if (null === $this->templateHelper) {
+            $container = System::getContainer();
+            $this->templateHelper = $container->has('diversworld.template.helper')
+                ? $container->get('diversworld.template.helper')
+                : $container->get(DcaTemplateHelper::class);
+        }
+
+        return $this->templateHelper;
     }
 }
