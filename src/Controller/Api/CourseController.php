@@ -25,6 +25,7 @@ class CourseController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
+        // Publicly accessible course list
         $this->getFramework()->initialize();
         $models = DcDiveCourseModel::findPublished();
 
@@ -55,6 +56,7 @@ class CourseController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
+        // Publicly accessible course detail
         $this->getFramework()->initialize();
         $model = DcDiveCourseModel::findByPk($id);
 
