@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\Database;
+use Contao\FrontendUser;
 use Contao\MemberModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\StringUtil;
 use Contao\System;
-use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,7 +46,7 @@ class MeController
             'phone' => $user->phone,
             'mobile' => $user->mobile,
             'dateOfBirth' => (int)$user->dateOfBirth,
-            'memberGroups' => array_map('intval', \Contao\StringUtil::deserialize($user->groups, true)),
+            'memberGroups' => array_map('intval', StringUtil::deserialize($user->groups, true)),
             'role' => $this->getMemberRole($user),
             'isTrainingManager' => $this->isTrainingManager($user),
         ]);
@@ -53,17 +55,17 @@ class MeController
     private function getMemberRole($user): string
     {
         $this->getFramework()->initialize();
-        if (!$user instanceof \Contao\FrontendUser) {
+        if (!$user instanceof FrontendUser) {
             return 'member';
         }
 
-        $groups = \Contao\StringUtil::deserialize($user->groups, true);
-        $db = \Contao\Database::getInstance();
+        $groups = StringUtil::deserialize($user->groups, true);
+        $db = Database::getInstance();
         $configResult = $db->prepare("SELECT instructor_groups FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
 
         $instructorGroups = [];
         if ($configResult->numRows > 0) {
-            $instructorGroups = \Contao\StringUtil::deserialize($configResult->instructor_groups, true);
+            $instructorGroups = StringUtil::deserialize($configResult->instructor_groups, true);
         }
 
         if (empty($instructorGroups)) {
@@ -83,19 +85,35 @@ class MeController
     {
         $this->getFramework()->initialize();
 
-        if (!$user instanceof \Contao\FrontendUser) {
+        if (!$user instanceof FrontendUser) {
             return false;
         }
 
-        $config = DcConfigModel::findOneBy('published', '1');
+        $groups = StringUtil::deserialize($user->groups, true);
+        $db = Database::getInstance();
+        $configResult = $db->prepare("SELECT instructor_groups, training_manager FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
 
-        if (null === $config) {
+        if ($configResult->numRows < 1) {
             return false;
         }
 
-        $trainingManagers = \Contao\StringUtil::deserialize($config->training_manager, true);
+        // 1. Check if user ID is explicitly listed
+        $trainingManagers = StringUtil::deserialize($configResult->training_manager, true);
+        if (in_array((int)$user->id, array_map('intval', $trainingManagers), true)) {
+            return true;
+        }
 
-        return in_array((int)$user->id, array_map('intval', $trainingManagers), true);
+        // 2. Check if user is in one of the instructor groups
+        $instructorGroups = StringUtil::deserialize($configResult->instructor_groups, true);
+        if (!empty($instructorGroups)) {
+            foreach ($instructorGroups as $groupId) {
+                if (in_array((string)$groupId, $groups, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     #[Route('', name: 'update', methods: ['PATCH'])]
@@ -104,7 +122,7 @@ class MeController
         $this->getFramework()->initialize();
         $user = $this->getSecurity()->getUser();
 
-        if (!$user instanceof \Contao\FrontendUser) {
+        if (!$user instanceof FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
@@ -123,7 +141,7 @@ class MeController
         }
 
         // 👇 WICHTIG: MemberModel laden um zu speichern
-        $memberModel = \Contao\MemberModel::findByPk($user->id);
+        $memberModel = MemberModel::findByPk($user->id);
         if (!$memberModel) {
             return new JsonResponse(['error' => 'Member not found'], 404);
         }
@@ -161,7 +179,7 @@ class MeController
         // Aktuellen User validieren
         $passwordHasher = System::getContainer()
             ->get('security.password_hasher_factory')
-            ->getPasswordHasher(\Contao\FrontendUser::class);
+            ->getPasswordHasher(FrontendUser::class);
 
         if (!$passwordHasher->verify((string)$frontendUser->password, (string)$current)) {
             return new JsonResponse(['error' => 'Current password incorrect'], 400);
