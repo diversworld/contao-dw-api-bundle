@@ -9,9 +9,11 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\System;
 use Contao\StringUtil;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -20,14 +22,19 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[Route('/api/login', name: 'api_login_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class LoginController
 {
-    private ?TokenStorageInterface $tokenStorage = null;
-    private ?RequestStack $requestStack = null;
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly RequestStack $requestStack,
+        private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
+        private readonly Security $security,
+    ) {
+    }
 
     #[Route('', name: 'login_check', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $content = json_decode($request->getContent(), true);
 
         if (!$content) {
@@ -59,9 +66,7 @@ class LoginController
         }
 
         // Validate password
-        $passwordHasher = System::getContainer()
-            ->get('security.password_hasher_factory')
-            ->getPasswordHasher(FrontendUser::class);
+        $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(FrontendUser::class);
 
         if (!$passwordHasher->verify((string)$user->password, $password)) {
             return new JsonResponse(['error' => 'Invalid credentials'], 401);
@@ -74,10 +79,10 @@ class LoginController
             $user->getRoles()
         );
 
-        $this->getTokenStorage()->setToken($token);
+        $this->tokenStorage->setToken($token);
 
         // Session speichern
-        $session = $this->getRequestStack()->getSession();
+        $session = $this->requestStack->getSession();
         $session->set('_security_frontend', serialize($token));
         $session->save();
 
@@ -99,7 +104,7 @@ class LoginController
 
     private function getMemberRole($user): string
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         if (!$user instanceof FrontendUser) {
             return 'member';
         }
@@ -128,7 +133,7 @@ class LoginController
 
     private function isTrainingManager($user): bool
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
 
         if (!$user instanceof FrontendUser) {
             return false;
@@ -143,32 +148,5 @@ class LoginController
         $trainingManagers = StringUtil::deserialize($config->training_manager, true);
 
         return in_array((int)$user->id, array_map('intval', $trainingManagers), true);
-    }
-
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getTokenStorage(): TokenStorageInterface
-    {
-        if (null === $this->tokenStorage) {
-            $this->tokenStorage = System::getContainer()->get('security.token_storage');
-        }
-
-        return $this->tokenStorage;
-    }
-
-    private function getRequestStack(): RequestStack
-    {
-        if (null === $this->requestStack) {
-            $this->requestStack = System::getContainer()->get('request_stack');
-        }
-
-        return $this->requestStack;
     }
 }
