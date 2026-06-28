@@ -23,12 +23,13 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 class LoginController
 {
     public function __construct(
-        private readonly ContaoFramework $framework,
+        private readonly ContaoFramework       $framework,
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly RequestStack $requestStack,
+        private readonly RequestStack          $requestStack,
         private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
-        private readonly Security $security,
-    ) {
+        private readonly Security              $security,
+    )
+    {
     }
 
     #[Route('', name: 'login_check', methods: ['POST'])]

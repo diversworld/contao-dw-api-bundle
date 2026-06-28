@@ -21,7 +21,8 @@ class CourseController
     public function __construct(
         private readonly ContaoFramework $framework,
         private readonly Security $security,
-    ) {
+    )
+    {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
