@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -15,20 +14,25 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 #[Route('/api/logout', name: 'api_logout_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class LogoutController
 {
-    private ?TokenStorageInterface $tokenStorage = null;
-    private ?RequestStack $requestStack = null;
-    private ?ContaoFramework $framework = null;
+    private const FRONTEND_SECURITY_SESSION_KEY = '_security_contao_frontend';
+
+    public function __construct(
+        private readonly ContaoFramework       $framework,
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly RequestStack          $requestStack,
+    )
+    {
+    }
 
     #[Route('', name: 'logout', methods: ['POST'])]
     public function logout(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        // Security Token im Storage löschen
-        $this->getTokenStorage()->setToken(null);
+        $this->framework->initialize();
+        $this->tokenStorage->setToken(null);
 
-        // Session abrufen und bereinigen
-        $session = $this->getRequestStack()->getSession();
-        $session->remove('_security_frontend');
+        // Keep this key aligned with LoginController and the Contao frontend firewall.
+        $session = $this->requestStack->getSession();
+        $session->remove(self::FRONTEND_SECURITY_SESSION_KEY);
         $session->invalidate();
 
         return new JsonResponse([
@@ -36,30 +40,4 @@ class LogoutController
         ]);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getTokenStorage(): TokenStorageInterface
-    {
-        if (null === $this->tokenStorage) {
-            $this->tokenStorage = System::getContainer()->get('security.token_storage');
-        }
-
-        return $this->tokenStorage;
-    }
-
-    private function getRequestStack(): RequestStack
-    {
-        if (null === $this->requestStack) {
-            $this->requestStack = System::getContainer()->get('request_stack');
-        }
-
-        return $this->requestStack;
-    }
 }

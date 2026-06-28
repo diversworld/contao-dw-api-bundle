@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Module Sample.
+ * This file is part of Contao DW API Bundle.
  *
  * (c) Eckhard Becker <info@diversworld.eu>
  * @license GPL-3.0-or-later
  * For the full copyright and license information,
  * please view the LICENSE file that was distributed with this source code.
- * @link https://github.com/diversworld/contao-example-module-bundle
+ * @link https://github.com/diversworld/contao-dw-api-bundle
  */
 
 namespace Diversworld\ContaoDwApiBundle\DependencyInjection;
@@ -31,9 +31,7 @@ class DiversworldContaoDwApiExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $configuration = new Configuration();
-
-        $config = $this->processConfiguration($configuration, $configs);
+        $this->processConfiguration(new Configuration(), $configs);
 
         $loader = new YamlFileLoader(
             $container,
@@ -43,8 +41,8 @@ class DiversworldContaoDwApiExtension extends Extension
         $loader->load('parameters.yaml');
         $loader->load('services.yaml');
         $loader->load('listener.yaml');
-        $rootKey = $this->getAlias();
-
-        $container->setParameter($rootKey.'.foo.bar', $config['foo']['bar']);
+        // Process the configuration tree even though the bundle currently has
+        // no runtime options. This keeps the extension ready for future API
+        // settings without exposing leftover example parameters.
     }
 }

@@ -6,7 +6,6 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\MemberModel;
-use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,12 +13,16 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api', name: 'api_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class MembersController
 {
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+    )
+    {
+    }
 
     #[Route('/members', name: 'members_list', methods: ['GET'])]
     public function members(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
 
         // Optional: API-Aktivierung über die Diveclub-Konfiguration prüfen (analog zu anderen Endpoints)
         $config = DcConfigModel::findOneBy('published', '1');
@@ -45,12 +48,4 @@ class MembersController
         return new JsonResponse($data);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
 }

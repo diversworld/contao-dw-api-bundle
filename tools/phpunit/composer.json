@@ -1,6 +1,7 @@
 {
+  "license": "GPL-3.0-or-later",
     "require": {
         "phpunit/phpunit": "^9.5",
-        "contao/test-case": "^5.3"
+      "contao/test-case": "^5.3 || ^6.0"
     }
 }

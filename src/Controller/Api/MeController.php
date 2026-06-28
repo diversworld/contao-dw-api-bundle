@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
-use Contao\Database;
 use Contao\FrontendUser;
 use Contao\MemberModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\StringUtil;
-use Contao\System;
+use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -21,9 +21,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class MeController
 {
+    use ApiControllerTrait;
+
     public function __construct(
         private readonly ContaoFramework $framework,
         private readonly Security        $security,
+        private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
     )
     {
     }
@@ -63,13 +66,12 @@ class MeController
             return 'member';
         }
 
-        $groups = StringUtil::deserialize($user->groups, true);
-        $db = Database::getInstance();
-        $configResult = $db->prepare("SELECT instructor_groups FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
+        $groups = array_map('strval', StringUtil::deserialize($user->groups, true));
+        $config = DcConfigModel::findOneBy('published', '1');
 
         $instructorGroups = [];
-        if ($configResult->numRows > 0) {
-            $instructorGroups = StringUtil::deserialize($configResult->instructor_groups, true);
+        if ($config !== null) {
+            $instructorGroups = StringUtil::deserialize($config->instructor_groups, true);
         }
 
         if (empty($instructorGroups)) {
@@ -93,22 +95,21 @@ class MeController
             return false;
         }
 
-        $groups = StringUtil::deserialize($user->groups, true);
-        $db = Database::getInstance();
-        $configResult = $db->prepare("SELECT instructor_groups, training_manager FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
+        $groups = array_map('strval', StringUtil::deserialize($user->groups, true));
+        $config = DcConfigModel::findOneBy('published', '1');
 
-        if ($configResult->numRows < 1) {
+        if (null === $config) {
             return false;
         }
 
-        // 1. Check if user ID is explicitly listed
-        $trainingManagers = StringUtil::deserialize($configResult->training_manager, true);
+        // A training manager can either be listed explicitly or inherit access
+        // through one of the configured instructor groups.
+        $trainingManagers = StringUtil::deserialize($config->training_manager, true);
         if (in_array((int)$user->id, array_map('intval', $trainingManagers), true)) {
             return true;
         }
 
-        // 2. Check if user is in one of the instructor groups
-        $instructorGroups = StringUtil::deserialize($configResult->instructor_groups, true);
+        $instructorGroups = StringUtil::deserialize($config->instructor_groups, true);
         if (!empty($instructorGroups)) {
             foreach ($instructorGroups as $groupId) {
                 if (in_array((string)$groupId, $groups, true)) {
@@ -130,13 +131,13 @@ class MeController
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = $this->decodeJsonPayload($request);
 
-        if (!$data) {
+        if (null === $data) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
-        // Nur erlaubte Felder ändern
+        // Only profile fields owned by the member API are accepted here.
         $fields = ['firstname', 'lastname', 'email', 'street', 'postal', 'city', 'phone', 'mobile', 'dateOfBirth'];
         foreach ($fields as $field) {
             if (isset($data[$field])) {
@@ -144,7 +145,8 @@ class MeController
             }
         }
 
-        // 👇 WICHTIG: MemberModel laden um zu speichern
+        // Reload the persistent model; the security user object is only the
+        // authenticated session representation.
         $memberModel = MemberModel::findByPk($user->id);
         if (!$memberModel) {
             return new JsonResponse(['error' => 'Member not found'], 404);
@@ -156,7 +158,9 @@ class MeController
             }
         }
 
-        $memberModel->save();
+        if (!$memberModel->save()) {
+            return new JsonResponse(['error' => 'Could not save member'], 500);
+        }
 
         return new JsonResponse(['success' => true]);
     }
@@ -171,7 +175,11 @@ class MeController
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = $this->decodeJsonPayload($request);
+
+        if (null === $data) {
+            return new JsonResponse(['error' => 'Invalid JSON'], 400);
+        }
 
         $current = $data['currentPassword'] ?? null;
         $new = $data['newPassword'] ?? null;
@@ -180,23 +188,19 @@ class MeController
             return new JsonResponse(['error' => 'Missing fields'], 400);
         }
 
-        // Aktuellen User validieren
-        $passwordHasher = System::getContainer()
-            ->get('security.password_hasher_factory')
-            ->getPasswordHasher(FrontendUser::class);
+        $passwordHasher = $this->passwordHasherFactory->getPasswordHasher($frontendUser);
 
         if (!$passwordHasher->verify((string)$frontendUser->password, (string)$current)) {
             return new JsonResponse(['error' => 'Current password incorrect'], 400);
         }
 
-        // 👇 WICHTIG: MemberModel neu laden
+        // Reload the persistent model before saving the new password hash.
         $memberModel = MemberModel::findByPk($frontendUser->id);
 
         if (!$memberModel) {
             return new JsonResponse(['error' => 'Member not found'], 404);
         }
 
-        // Passwort korrekt hashen
         $hashedPassword = $passwordHasher->hash((string)$new);
 
         $memberModel->password = $hashedPassword;

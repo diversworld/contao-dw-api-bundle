@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\FrontendUser;
 use Contao\StringUtil;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentExercisesModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseExercisesModel;
-use Contao\System;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,8 +24,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class ProgressController
 {
-    private ?Security $security = null;
-    private ?ContaoFramework $framework = null;
+    use ApiControllerTrait;
+
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+    )
+    {
+    }
 
     /**
      * Get progress for the current logged in user (student view)
@@ -32,9 +39,9 @@ class ProgressController
     #[Route('', name: 'student', methods: ['GET'])]
     public function studentProgress(): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
-        if (!$user) {
+        $this->framework->initialize();
+        $user = $this->security->getUser();
+        if (!$user instanceof FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
@@ -131,9 +138,9 @@ class ProgressController
     #[Route('/instructor', name: 'instructor', methods: ['GET'])]
     public function instructorStudents(): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
-        if (!$user) {
+        $this->framework->initialize();
+        $user = $this->security->getUser();
+        if (!$user instanceof FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
@@ -250,21 +257,28 @@ class ProgressController
     #[Route('/{exerciseId}', name: 'update', methods: ['PATCH'], requirements: ['exerciseId' => '\d+'])]
     public function updateProgress(int $exerciseId, Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        // Simple instructor check: Is logged in?
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
+
+        if (!$user instanceof FrontendUser) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
 
         $exercise = DcStudentExercisesModel::findByPk($exerciseId);
         if (!$exercise) {
             return new JsonResponse(['error' => 'Exercise not found'], 404);
         }
 
-        $content = json_decode($request->getContent(), true);
-        if (!$content) {
+        if (!$this->canManageExercise($user, $exercise)) {
+            return new JsonResponse(['error' => 'Forbidden'], 403);
+        }
+
+        $content = $this->decodeJsonPayload($request);
+        if (null === $content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
-        // Only allow updating status, dateCompleted, instructor, notes
+        // The app may update only progress fields; enrollment and course data stay immutable here.
         if (isset($content['status'])) {
             $exercise->status = (string)$content['status'];
         }
@@ -275,7 +289,7 @@ class ProgressController
             $exercise->notes = (string)$content['notes'];
         }
 
-        // Automatically set current user as instructor if not provided
+        // Default to the logged-in instructor so manually completed exercises are attributable.
         $exercise->instructor = (int)($content['instructor'] ?? $user->id);
         $exercise->tstamp = time();
 
@@ -286,21 +300,46 @@ class ProgressController
         return new JsonResponse(['success' => true]);
     }
 
-    private function getFramework(): ContaoFramework
+    private function canManageExercise(FrontendUser $user, DcStudentExercisesModel $exercise): bool
     {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
+        if ($this->isTrainingManager($user)) {
+            return true;
         }
 
-        return $this->framework;
+        if ((int)($exercise->instructor ?? 0) === (int)$user->id) {
+            return true;
+        }
+
+        $enrollment = DcCourseStudentsModel::findByPk($exercise->pid);
+        if (!$enrollment) {
+            return false;
+        }
+
+        // Keep this authorization rule in sync with instructorStudents(): an
+        // instructor may manage exercises assigned through the course template,
+        // the concrete event, or the exercise itself.
+        $course = DcDiveCourseModel::findByPk($enrollment->course_id);
+        if ($course && (int)($course->instructor ?? 0) === (int)$user->id) {
+            return true;
+        }
+
+        $event = DcCourseEventModel::findByPk($enrollment->event_id);
+        if ($event && (int)($event->instructor ?? 0) === (int)$user->id) {
+            return true;
+        }
+
+        return false;
     }
 
-    private function getSecurity(): Security
+    private function isTrainingManager(FrontendUser $user): bool
     {
-        if (null === $this->security) {
-            $this->security = System::getContainer()->get('security.helper');
+        $config = DcConfigModel::findOneBy('published', '1');
+        if (null === $config) {
+            return false;
         }
 
-        return $this->security;
+        $trainingManagers = StringUtil::deserialize($config->training_manager, true);
+
+        return in_array((int)$user->id, array_map('intval', $trainingManagers), true);
     }
 }

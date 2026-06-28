@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FilesModel;
-use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventScheduleModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
@@ -18,12 +17,16 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/events', name: 'api_events_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class EventController
 {
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $models = DcCourseEventModel::findAll();
 
         if (null === $models) {
@@ -53,7 +56,7 @@ class EventController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcCourseEventModel::findByPk($id);
 
         if (null === $model) {
@@ -91,7 +94,7 @@ class EventController
     #[Route('/{id}/schedule', name: 'schedule', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function schedule(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $event = DcCourseEventModel::findByPk($id);
 
         if (null === $event) {
@@ -129,12 +132,4 @@ class EventController
         return new JsonResponse($data);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
 }

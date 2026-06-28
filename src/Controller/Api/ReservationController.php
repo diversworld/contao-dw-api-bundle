@@ -7,7 +7,6 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationItemsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcReservationModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,15 +18,21 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class ReservationController
 {
-    private ?Security $security = null;
-    private ?Connection $db = null;
-    private ?ContaoFramework $framework = null;
+    use ApiControllerTrait;
+
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+        private readonly Connection      $db,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -59,8 +64,8 @@ class ReservationController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -104,16 +109,16 @@ class ReservationController
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
-        $content = json_decode($request->getContent(), true);
+        $content = $this->decodeJsonPayload($request);
 
-        if (!$content) {
+        if (null === $content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
@@ -121,7 +126,8 @@ class ReservationController
         $reservedFor = (int)($content['reservedFor'] ?? $userId);
         $eventId = (int)($content['event_id'] ?? 0);
 
-        // Titel und Alias analog zu DCA generieren
+        // Generate title and alias in the same shape as the backend DCA so
+        // reservations created by the app stay recognizable in Contao.
         $formattedMemberId = str_pad((string)$userId, 3, '0', STR_PAD_LEFT);
         $currentDate = date('dmHi');
         $currentYear = date('Y');
@@ -146,10 +152,15 @@ class ReservationController
             return new JsonResponse(['error' => 'Could not save reservation'], 500);
         }
 
-        // Items verarbeiten
+        // Reservation items are stored in a child table; only accept arrays so
+        // scalar JSON values cannot create incomplete rows.
         if (isset($content['items']) && is_array($content['items'])) {
             foreach ($content['items'] as $itemData) {
-                $this->getDb()->insert('tl_dc_reservation_items', [
+                if (!is_array($itemData)) {
+                    continue;
+                }
+
+                $this->db->insert('tl_dc_reservation_items', [
                     'pid' => $reservation->id,
                     'tstamp' => time(),
                     'item_id' => (int)($itemData['item_id'] ?? 0),
@@ -169,30 +180,4 @@ class ReservationController
         return new JsonResponse(['success' => true, 'id' => $reservation->id]);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getSecurity(): Security
-    {
-        if (null === $this->security) {
-            $this->security = System::getContainer()->get('security.helper');
-        }
-
-        return $this->security;
-    }
-
-    private function getDb(): Connection
-    {
-        if (null === $this->db) {
-            $this->db = System::getContainer()->get('doctrine.dbal.default_connection');
-        }
-
-        return $this->db;
-    }
 }

@@ -4,7 +4,7 @@
          bootstrap="../../vendor/autoload.php">
 
     <testsuites>
-        <testsuite name="contao-example-module-bundle">
+        <testsuite name="contao-dw-api-bundle">
             <directory>../../tests</directory>
         </testsuite>
     </testsuites>

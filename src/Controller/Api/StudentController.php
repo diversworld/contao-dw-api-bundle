@@ -6,7 +6,6 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -15,12 +14,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class StudentController
 {
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $models = DcStudentsModel::findAll();
 
         if (null === $models) {
@@ -47,7 +50,7 @@ class StudentController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcStudentsModel::findByPk($id);
 
         if (null === $model) {
@@ -66,12 +69,4 @@ class StudentController
         return new JsonResponse($row);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
 }

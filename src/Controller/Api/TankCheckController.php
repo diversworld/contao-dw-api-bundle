@@ -11,7 +11,7 @@ use Diversworld\ContaoDiveclubBundle\Model\DcCheckOrderModel;
 use Diversworld\ContaoDiveclubBundle\Helper\TankCheckHelper;
 use Contao\CalendarEventsModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
+use Contao\FrontendUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,13 +21,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/api/tank-checks', name: 'api_tank_checks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class TankCheckController
 {
-    private ?Security $security = null;
-    private ?ContaoFramework $framework = null;
+    use ApiControllerTrait;
+
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $models = DcCheckProposalModel::findBy(['published=?'], [1], ['order' => 'proposalDate DESC']);
 
         if (null === $models) {
@@ -67,7 +73,7 @@ class TankCheckController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcCheckProposalModel::findByPk($id);
 
         if (null === $model) {
@@ -108,11 +114,15 @@ class TankCheckController
     #[IsGranted('ROLE_MEMBER')]
     public function book(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
-        $content = json_decode($request->getContent(), true);
+        $this->framework->initialize();
+        $user = $this->security->getUser();
+        if (!$user instanceof FrontendUser) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
 
-        if (!$content || !isset($content['proposal_id'], $content['items'])) {
+        $content = $this->decodeJsonPayload($request);
+
+        if (null === $content || !isset($content['proposal_id'], $content['items']) || !is_array($content['items'])) {
             return new JsonResponse(['error' => 'Invalid JSON or missing fields'], 400);
         }
 
@@ -163,7 +173,8 @@ class TankCheckController
                 $order->notes = $item['notes'];
             }
 
-            // Articles as blob/serialized array
+            // Persist selected articles in Contao's serialized array format.
+            // Assigning a raw PHP array here can fail with "Array to string conversion".
             $articleIds = [];
             if (isset($item['articles']) && is_array($item['articles'])) {
                 // Artikel-IDs auf Integer normalisieren
@@ -173,7 +184,7 @@ class TankCheckController
                     }
                     return null;
                 }, $item['articles']), static fn($v) => null !== $v));
-                $order->selectedArticles = $articleIds; // Contao models handle serialization if it is a blob and multiple is true
+                $order->selectedArticles = serialize($articleIds);
             }
 
             // Calculate price using Helper
@@ -190,7 +201,7 @@ class TankCheckController
             $totalPrice += (float)$itemPrice;
 
             if (!$order->save()) {
-                // Log error if needed
+                return new JsonResponse(['error' => 'Could not create booking item'], 500);
             }
 
             // Refetch or ensure totalPrice is in row for results
@@ -212,21 +223,4 @@ class TankCheckController
         ]);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getSecurity(): Security
-    {
-        if (null === $this->security) {
-            $this->security = System::getContainer()->get('security.helper');
-        }
-
-        return $this->security;
-    }
 }

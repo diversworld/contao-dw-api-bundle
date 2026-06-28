@@ -6,24 +6,30 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Diversworld\ContaoDiveclubBundle\Model\DcTanksModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/tanks', name: 'api_tanks_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class TankController
 {
-    private ?Security $security = null;
-    private ?ContaoFramework $framework = null;
+    use ApiControllerTrait;
+
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
 
-        $user = $this->getSecurity()->getUser();
+        $user = $this->security->getUser();
         $status = $request->query->get('status');
 
         if ($status === 'available') {
@@ -33,7 +39,7 @@ class TankController
                 return new JsonResponse(['error' => 'Not authenticated'], 401);
             }
             $models = DcTanksModel::findBy(['owner=?', 'status=?'], [$user->id, 'owned']);
-        } elseif ($this->getSecurity()->isGranted('ROLE_ADMIN')) {
+        } elseif ($this->security->isGranted('ROLE_ADMIN')) {
             $models = DcTanksModel::findAll();
         } elseif ($user) {
             // Für angemeldete Mitglieder: Eigene Tanks UND alle als "verfügbar" veröffentlichten Tanks laden
@@ -66,7 +72,7 @@ class TankController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcTanksModel::findByPk($id);
 
         if (null === $model) {
@@ -74,8 +80,8 @@ class TankController
         }
 
         // Security check: Only owner or admin can see details (except if it's public)
-        $user = $this->getSecurity()->getUser();
-        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->security->getUser();
+        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             if (!$model->published) {
                 return new JsonResponse(['error' => 'Access denied'], 403);
             }
@@ -94,12 +100,19 @@ class TankController
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
+    #[IsGranted('ROLE_MEMBER')]
     public function create(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $data = json_decode($request->getContent(), true);
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
-        if (!$data) {
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], 401);
+        }
+
+        $data = $this->decodeJsonPayload($request);
+
+        if (null === $data) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
@@ -108,8 +121,9 @@ class TankController
             return new JsonResponse(['error' => 'Missing required fields: title, serialNumber, size'], 400);
         }
 
-        // Auto-assign owner if logged in and not provided
-        if (empty($data['owner']) && ($user = $this->getSecurity()->getUser())) {
+        // Never trust the owner field from mobile clients. Regular members can
+        // create tanks only for themselves; admins may explicitly assign another owner.
+        if (!$this->security->isGranted('ROLE_ADMIN') || empty($data['owner'])) {
             $data['owner'] = $user->id;
         }
 
@@ -124,7 +138,7 @@ class TankController
     #[Route('/{id}', name: 'update', methods: ['PUT', 'PATCH'], requirements: ['id' => '\d+'])]
     public function update(int $id, Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcTanksModel::findByPk($id);
 
         if (null === $model) {
@@ -132,14 +146,18 @@ class TankController
         }
 
         // Security check: Only owner or admin can update
-        $user = $this->getSecurity()->getUser();
-        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->security->getUser();
+        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
-        $data = json_decode($request->getContent(), true);
-        if (!$data) {
+        $data = $this->decodeJsonPayload($request);
+        if (null === $data) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
+        }
+
+        if (!$this->security->isGranted('ROLE_ADMIN')) {
+            unset($data['owner']);
         }
 
         $this->updateModelWithData($model, $data);
@@ -152,7 +170,7 @@ class TankController
     #[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function delete(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcTanksModel::findByPk($id);
 
         if (null === $model) {
@@ -160,8 +178,8 @@ class TankController
         }
 
         // Security check: Only owner or admin can delete
-        $user = $this->getSecurity()->getUser();
-        if (!$this->getSecurity()->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
+        $user = $this->security->getUser();
+        if (!$this->security->isGranted('ROLE_ADMIN') && ($user === null || (int)$model->owner !== (int)$user->id)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
@@ -186,21 +204,4 @@ class TankController
         }
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getSecurity(): Security
-    {
-        if (null === $this->security) {
-            $this->security = System::getContainer()->get('security.helper');
-        }
-
-        return $this->security;
-    }
 }

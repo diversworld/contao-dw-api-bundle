@@ -22,6 +22,6 @@ return ECSConfig::configure()
 	->withParallel()
 	->withSpacing(Option::INDENTATION_SPACES, "\n")
 	->withConfiguredRule(HeaderCommentFixer::class, [
-        'header' => "This file is part of Module Sample.\n\n(c) Eckhard Becker &lt;info@diversworld.eu&gt;\n@license GPL-3.0-or-later\nFor the full copyright and license information,\nplease view the LICENSE file that was distributed with this source code.\n@link https://github.com/diversworld/contao-example-module-bundle",
+        'header' => "This file is part of Contao DW API Bundle.\n\n(c) Eckhard Becker &lt;info@diversworld.eu&gt;\n@license GPL-3.0-or-later\nFor the full copyright and license information,\nplease view the LICENSE file that was distributed with this source code.\n@link https://github.com/diversworld/contao-dw-api-bundle",
 	])
-	->withCache(sys_get_temp_dir() . '/ecs/diversworld/contao-example-module-bundle');
+    ->withCache(sys_get_temp_dir() . '/ecs/diversworld/contao-dw-api-bundle');

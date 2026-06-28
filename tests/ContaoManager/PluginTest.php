@@ -3,23 +3,24 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Module Sample.
+ * This file is part of Contao DW API Bundle.
  *
  * (c) Eckhard Becker <info@diversworld.eu>
  * @license GPL-3.0-or-later
  * For the full copyright and license information,
  * please view the LICENSE file that was distributed with this source code.
- * @link https://github.com/diversworld/contao-example-module-bundle
+ * @link https://github.com/diversworld/contao-dw-api-bundle
  */
 
-namespace Diversworld\ContaoExampleModuleBundle\Tests\ContaoManager;
+namespace Diversworld\ContaoDwApiBundle\Tests\ContaoManager;
 
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\DelegatingParser;
 use Contao\TestCase\ContaoTestCase;
-use Diversworld\ContaoExampleModuleBundle\ContaoManager\Plugin;
-use Diversworld\ContaoExampleModuleBundle\DiversworldContaoExampleModuleBundle;
+use Diversworld\ContaoDiveclubBundle\DiversworldContaoDiveclubBundle;
+use Diversworld\ContaoDwApiBundle\ContaoManager\Plugin;
+use Diversworld\ContaoDwApiBundle\DiversworldContaoDwApiBundle;
 
 class PluginTest extends ContaoTestCase
 {
@@ -43,7 +44,7 @@ class PluginTest extends ContaoTestCase
 
         $this->assertCount(1, $bundles);
         $this->assertInstanceOf(BundleConfig::class, $bundles[0]);
-        $this->assertSame(DiversworldContaoExampleModuleBundle::class, $bundles[0]->getName());
-        $this->assertSame([ContaoCoreBundle::class], $bundles[0]->getLoadAfter());
+        $this->assertSame(DiversworldContaoDwApiBundle::class, $bundles[0]->getName());
+        $this->assertSame([ContaoCoreBundle::class, DiversworldContaoDiveclubBundle::class], $bundles[0]->getLoadAfter());
     }
 }

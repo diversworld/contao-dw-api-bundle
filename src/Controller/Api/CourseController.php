@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
+use Contao\FrontendUser;
 use Contao\StringUtil;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Diversworld\ContaoDiveclubBundle\Model\DcCourseEventModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
@@ -18,6 +20,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/api/courses', name: 'api_courses_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class CourseController
 {
+    use ApiControllerTrait;
+
     public function __construct(
         private readonly ContaoFramework $framework,
         private readonly Security $security,
@@ -88,19 +92,32 @@ class CourseController
     {
         $this->framework->initialize();
         $user = $this->security->getUser();
-        if (!$user) {
+        if (!$user instanceof FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
-        $content = json_decode($request->getContent(), true);
-        if (!$content || !isset($content['course_id'])) {
+        $content = $this->decodeJsonPayload($request);
+        if (null === $content || !isset($content['course_id'])) {
             return new JsonResponse(['error' => 'Invalid JSON or missing course_id'], 400);
         }
 
         $courseId = (int)$content['course_id'];
         $eventId = (int)($content['event_id'] ?? 0);
 
-        // Find student record for the member
+        $course = DcDiveCourseModel::findByPk($courseId);
+        if (null === $course || !$course->published) {
+            return new JsonResponse(['error' => 'Course not found'], 404);
+        }
+
+        if ($eventId > 0) {
+            $event = DcCourseEventModel::findByPk($eventId);
+            if (null === $event || (int)$event->course_id !== $courseId) {
+                return new JsonResponse(['error' => 'Event does not belong to this course'], 400);
+            }
+        }
+
+        // Every course enrollment is linked to a student record. Create the
+        // student profile lazily from the logged-in member when it does not yet exist.
         $student = DcStudentsModel::findOneBy('memberId', $user->id);
 
         if (!$student) {
@@ -116,8 +133,10 @@ class CourseController
             }
         }
 
-        // Check if already enrolled
-        $existing = DcCourseStudentsModel::findOneBy(['pid=?', 'course_id=?'], [$student->id, $courseId]);
+        $existing = $eventId > 0
+            ? DcCourseStudentsModel::findOneBy(['pid=?', 'course_id=?', 'event_id=?'], [$student->id, $courseId, $eventId])
+            : DcCourseStudentsModel::findOneBy(['pid=?', 'course_id=?'], [$student->id, $courseId]);
+
         if ($existing) {
             return new JsonResponse(['error' => 'Already enrolled in this course'], 400);
         }

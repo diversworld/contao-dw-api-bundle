@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Helper\DcaTemplateHelper;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -15,14 +14,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class SizesOptionsController
 {
-    private ?DcaTemplateHelper $templateHelper = null;
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework   $framework,
+        private readonly DcaTemplateHelper $templateHelper,
+    )
+    {
+    }
 
     #[Route('', name: 'all', methods: ['GET'])]
     public function getOptions(): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $templateHelper = $this->getTemplateHelper();
+        $this->framework->initialize();
+        $templateHelper = $this->templateHelper;
 
         return new JsonResponse([
             'sizes' => $templateHelper->getSizes(),
@@ -30,24 +33,4 @@ class SizesOptionsController
         ]);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getTemplateHelper(): DcaTemplateHelper
-    {
-        if (null === $this->templateHelper) {
-            $container = System::getContainer();
-            $this->templateHelper = $container->has('diversworld.template.helper')
-                ? $container->get('diversworld.template.helper')
-                : $container->get(DcaTemplateHelper::class);
-        }
-
-        return $this->templateHelper;
-    }
 }

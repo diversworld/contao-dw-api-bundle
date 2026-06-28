@@ -6,10 +6,8 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 
 use Contao\FrontendUser;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Contao\StringUtil;
 use Diversworld\ContaoDiveclubBundle\Model\DcConfigModel;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -22,12 +20,16 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[Route('/api/login', name: 'api_login_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class LoginController
 {
+    use ApiControllerTrait;
+
+    private const FRONTEND_FIREWALL = 'contao_frontend';
+    private const FRONTEND_SECURITY_SESSION_KEY = '_security_contao_frontend';
+
     public function __construct(
         private readonly ContaoFramework       $framework,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly RequestStack          $requestStack,
         private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
-        private readonly Security              $security,
     )
     {
     }
@@ -36,9 +38,9 @@ class LoginController
     public function login(Request $request): JsonResponse
     {
         $this->framework->initialize();
-        $content = json_decode($request->getContent(), true);
+        $content = $this->decodeJsonPayload($request);
 
-        if (!$content) {
+        if (null === $content) {
             return new JsonResponse(['error' => 'Invalid JSON'], 400);
         }
 
@@ -48,8 +50,8 @@ class LoginController
             return new JsonResponse(['error' => 'API is currently disabled'], 503);
         }
 
-        $username = $content['username'] ?? '';
-        $password = $content['password'] ?? '';
+        $username = trim((string)($content['username'] ?? ''));
+        $password = (string)($content['password'] ?? '');
 
         if (empty($username) || empty($password)) {
             return new JsonResponse(['error' => 'Missing username or password'], 400);
@@ -66,25 +68,25 @@ class LoginController
             return new JsonResponse(['error' => 'Account is disabled'], 403);
         }
 
-        // Validate password
-        $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(FrontendUser::class);
+        $passwordHasher = $this->passwordHasherFactory->getPasswordHasher($user);
 
         if (!$passwordHasher->verify((string)$user->password, $password)) {
             return new JsonResponse(['error' => 'Invalid credentials'], 401);
         }
 
-        // Symfony Security Token erzeugen
+        // The firewall name must match Contao's frontend firewall; otherwise
+        // Symfony will not restore the user from the session on the next request.
         $token = new UsernamePasswordToken(
             $user,
-            'frontend',
+            self::FRONTEND_FIREWALL,
             $user->getRoles()
         );
 
         $this->tokenStorage->setToken($token);
 
-        // Session speichern
         $session = $this->requestStack->getSession();
-        $session->set('_security_frontend', serialize($token));
+        $session->migrate(true);
+        $session->set(self::FRONTEND_SECURITY_SESSION_KEY, serialize($token));
         $session->save();
 
         return new JsonResponse([
@@ -96,7 +98,7 @@ class LoginController
                 'lastname' => $user->lastname,
                 'email' => $user->email,
                 'dateOfBirth' => (int)$user->dateOfBirth,
-                'memberGroups' => array_map('intval', \Contao\StringUtil::deserialize($user->groups, true)),
+                'memberGroups' => array_map('intval', StringUtil::deserialize($user->groups, true)),
                 'role' => $this->getMemberRole($user),
                 'isTrainingManager' => $this->isTrainingManager($user),
             ]
@@ -110,13 +112,12 @@ class LoginController
             return 'member';
         }
 
-        $groups = \Contao\StringUtil::deserialize($user->groups, true);
-        $db = \Contao\Database::getInstance();
-        $configResult = $db->prepare("SELECT instructor_groups FROM tl_dc_config WHERE published='1' LIMIT 1")->execute();
+        $groups = array_map('strval', StringUtil::deserialize($user->groups, true));
+        $config = DcConfigModel::findOneBy('published', '1');
 
         $instructorGroups = [];
-        if ($configResult->numRows > 0) {
-            $instructorGroups = \Contao\StringUtil::deserialize($configResult->instructor_groups, true);
+        if ($config !== null) {
+            $instructorGroups = StringUtil::deserialize($config->instructor_groups, true);
         }
 
         if (empty($instructorGroups)) {

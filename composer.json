@@ -28,14 +28,14 @@
     },
     "require": {
         "php": "^8.2",
-        "contao/core-bundle": "^5.3",
+      "contao/core-bundle": "^5.3 || ^6.0",
         "symfony/security-bundle": "^6.4 || ^7.0",
         "diversworld/contao-diveclub-bundle": "^3.4"
     },
     "require-dev": {
         "contao/easy-coding-standard": "^6.13",
         "contao/manager-plugin": "^2.12",
-        "contao/test-case": "^5.3",
+      "contao/test-case": "^5.3 || ^6.0",
         "phpunit/phpunit": "^9.5"
     },
     "autoload": {

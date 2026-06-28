@@ -7,7 +7,6 @@ namespace Diversworld\ContaoDwApiBundle\Controller\Api;
 use Diversworld\ContaoDiveclubBundle\Helper\DcaTemplateHelper;
 use Diversworld\ContaoDiveclubBundle\Model\DcEquipmentModel;
 use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -16,13 +15,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class EquipmentController
 {
-    private ?DcaTemplateHelper $templateHelper = null;
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework   $framework,
+        private readonly DcaTemplateHelper $templateHelper,
+    )
+    {
+    }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $models = DcEquipmentModel::findAll();
 
         if (null === $models) {
@@ -30,7 +33,7 @@ class EquipmentController
         }
 
         // Cache for labels
-        $templateHelper = $this->getTemplateHelper();
+        $templateHelper = $this->templateHelper;
         $types = $templateHelper->getEquipmentFlatTypes();
         $manufacturers = $templateHelper->getManufacturers();
         $sizes = $templateHelper->getSizes();
@@ -73,7 +76,7 @@ class EquipmentController
     #[Route('/{id}', name: 'detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function detail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $model = DcEquipmentModel::findByPk($id);
 
         if (null === $model) {
@@ -99,7 +102,7 @@ class EquipmentController
         $row['sub_type'] = $row['subType'] ?? '';
 
         // Add Labels
-        $templateHelper = $this->getTemplateHelper();
+        $templateHelper = $this->templateHelper;
         $row['type_label'] = $templateHelper->getEquipmentFlatTypes()[$row['type']] ?? '-';
         $subTypes = $templateHelper->getSubTypes((int)$row['type']);
         $row['sub_type_label'] = $subTypes[$row['subType']] ?? '-';
@@ -110,24 +113,4 @@ class EquipmentController
         return new JsonResponse($row);
     }
 
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getTemplateHelper(): DcaTemplateHelper
-    {
-        if (null === $this->templateHelper) {
-            $container = System::getContainer();
-            $this->templateHelper = $container->has('diversworld.template.helper')
-                ? $container->get('diversworld.template.helper')
-                : $container->get(DcaTemplateHelper::class);
-        }
-
-        return $this->templateHelper;
-    }
 }
