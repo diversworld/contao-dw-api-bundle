@@ -26,13 +26,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class InstructorController
 {
-    private ?ContaoFramework $framework = null;
-
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+    )
+    {
+    }
 
     #[Route('/dashboard', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         if (!$this->isTrainingManager()) {
             return new JsonResponse(['error' => 'Forbidden: Training Manager role required'], 403);
         }
@@ -99,8 +103,8 @@ class InstructorController
 
     private function isTrainingManager(): bool
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user instanceof FrontendUser) {
             return false;
@@ -193,7 +197,7 @@ class InstructorController
     #[Route('/approve/{id}', name: 'approve', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function approve(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         if (!$this->isTrainingManager()) {
             return new JsonResponse(['error' => 'Forbidden: Training Manager role required'], 403);
         }
@@ -217,7 +221,7 @@ class InstructorController
     #[Route('/reject/{id}', name: 'reject', methods: ['PATCH'], requirements: ['id' => '\d+'])]
     public function reject(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         if (!$this->isTrainingManager()) {
             return new JsonResponse(['error' => 'Forbidden: Training Manager role required'], 403);
         }
@@ -241,8 +245,8 @@ class InstructorController
 
     private function isInstructor(): bool
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user instanceof FrontendUser) {
             return false;
@@ -267,19 +271,5 @@ class InstructorController
         }
 
         return false;
-    }
-
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getSecurity(): Security
-    {
-        return System::getContainer()->get('security.helper');
     }
 }

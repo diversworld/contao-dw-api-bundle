@@ -21,14 +21,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MEMBER')]
 class MeController
 {
-    private ?Security $security = null;
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+        private readonly Security        $security,
+    )
+    {
+    }
 
     #[Route('', name: 'me', methods: ['GET'])]
     public function me(): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -54,7 +58,7 @@ class MeController
 
     private function getMemberRole($user): string
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         if (!$user instanceof FrontendUser) {
             return 'member';
         }
@@ -83,7 +87,7 @@ class MeController
 
     private function isTrainingManager($user): bool
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
 
         if (!$user instanceof FrontendUser) {
             return false;
@@ -119,8 +123,8 @@ class MeController
     #[Route('', name: 'update', methods: ['PATCH'])]
     public function update(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $user = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $user = $this->security->getUser();
 
         if (!$user instanceof FrontendUser) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -160,8 +164,8 @@ class MeController
     #[Route('/password', name: 'change_password', methods: ['PATCH'])]
     public function changePassword(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
-        $frontendUser = $this->getSecurity()->getUser();
+        $this->framework->initialize();
+        $frontendUser = $this->security->getUser();
 
         if (!$frontendUser instanceof PasswordAuthenticatedUserInterface) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
@@ -199,23 +203,5 @@ class MeController
         $memberModel->save();
 
         return new JsonResponse(['success' => true]);
-    }
-
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
-    }
-
-    private function getSecurity(): Security
-    {
-        if (null === $this->security) {
-            $this->security = System::getContainer()->get('security.helper');
-        }
-
-        return $this->security;
     }
 }

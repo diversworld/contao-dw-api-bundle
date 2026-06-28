@@ -18,12 +18,16 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/app', name: 'api_app_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class AppController
 {
-    private ?ContaoFramework $framework = null;
+    public function __construct(
+        private readonly ContaoFramework $framework,
+    )
+    {
+    }
 
     #[Route('/config', name: 'config', methods: ['GET'])]
     public function config(): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $config = DcConfigModel::findOneBy('published', '1');
 
         if (!$config) {
@@ -53,7 +57,7 @@ class AppController
     #[Route('/news', name: 'news_list', methods: ['GET'])]
     public function newsList(Request $request): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $config = DcConfigModel::findOneBy('published', '1');
 
         if (!$config || !$config->activateApi) {
@@ -131,7 +135,7 @@ class AppController
     #[Route('/news/{id}', name: 'news_detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function newsDetail(int $id): JsonResponse
     {
-        $this->getFramework()->initialize();
+        $this->framework->initialize();
         $time = time();
         $item = NewsModel::findBy(
             [
@@ -195,14 +199,5 @@ class AppController
             'image' => $imagePath,
             'images' => $images,
         ]);
-    }
-
-    private function getFramework(): ContaoFramework
-    {
-        if (null === $this->framework) {
-            $this->framework = System::getContainer()->get('contao.framework');
-        }
-
-        return $this->framework;
     }
 }
