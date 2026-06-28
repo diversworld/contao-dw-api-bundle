@@ -10,6 +10,7 @@ use Contao\System;
 use Diversworld\ContaoDiveclubBundle\Model\DcCourseStudentsModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcDiveCourseModel;
 use Diversworld\ContaoDiveclubBundle\Model\DcStudentsModel;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,18 +20,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/api/courses', name: 'api_courses_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class CourseController
 {
-    public function __construct(
-        private readonly ContaoFramework $framework,
-        private readonly Security        $security,
-    )
-    {
-    }
+    private ?ContaoFramework $framework = null;
+    private ?Security $security = null;
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         // Publicly accessible course list
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $models = DcDiveCourseModel::findPublished();
 
         if (null === $models) {
@@ -61,7 +58,7 @@ class CourseController
     public function detail(int $id): JsonResponse
     {
         // Publicly accessible course detail
-        $this->framework->initialize();
+        $this->getFramework()->initialize();
         $model = DcDiveCourseModel::findByPk($id);
 
         if (null === $model || !$model->published) {
@@ -87,8 +84,8 @@ class CourseController
     #[IsGranted('ROLE_MEMBER')]
     public function enroll(Request $request): JsonResponse
     {
-        $this->framework->initialize();
-        $user = $this->security->getUser();
+        $this->getFramework()->initialize();
+        $user = $this->getSecurity()->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
@@ -139,5 +136,42 @@ class CourseController
         }
 
         return new JsonResponse(['success' => true, 'id' => $enrollment->id]);
+    }
+
+    private function getFramework(): ContaoFramework
+    {
+        if (null === $this->framework) {
+            $this->framework = $this->getContainer()->get('contao.framework');
+        }
+
+        return $this->framework;
+    }
+
+    private function getSecurity(): Security
+    {
+        if (null === $this->security) {
+            $this->security = $this->getContainer()->get('security.helper');
+        }
+
+        return $this->security;
+    }
+
+    private function getContainer(): ContainerInterface
+    {
+        $container = System::getContainer();
+
+        if (null === $container && isset($GLOBALS['kernel']) && \is_object($GLOBALS['kernel']) && \method_exists($GLOBALS['kernel'], 'getContainer')) {
+            $container = $GLOBALS['kernel']->getContainer();
+
+            if (null !== $container) {
+                System::setContainer($container);
+            }
+        }
+
+        if (null === $container) {
+            throw new \RuntimeException('Contao container is not initialized.');
+        }
+
+        return $container;
     }
 }
