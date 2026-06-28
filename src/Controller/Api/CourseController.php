@@ -17,7 +17,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/courses', name: 'api_courses_', defaults: ['_scope' => 'frontend', '_token_check' => false])]
-#[IsGranted('ROLE_MEMBER')]
 class CourseController
 {
     private ?Security $security = null;
@@ -79,6 +78,7 @@ class CourseController
     }
 
     #[Route('/enroll', name: 'enroll', methods: ['POST'])]
+    #[IsGranted('ROLE_MEMBER')]
     public function enroll(Request $request): JsonResponse
     {
         $this->getFramework()->initialize();
