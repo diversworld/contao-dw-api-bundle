@@ -85,8 +85,10 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 - `GET /api/courses`: Liste der veröffentlichten Kursveranstaltungen aus `tl_dc_course_event`; ein leeres `dateEnd` gilt
   als laufender Kurs.
 - `GET /api/courses/{id}`: Details zu einer Kursveranstaltung aus `tl_dc_course_event`.
-- `POST /api/courses/enroll`: Anmeldung zu einem Kurs.
-    - Erwartet JSON mit `course_id` und optional `event_id`.
+- `POST /api/courses/enroll`: Öffentliche Anmeldung zu einer Kursveranstaltung.
+    - Erwartet JSON mit `course_id` (Event-ID aus der Kursliste) oder `event_id`.
+    - Für Gäste zusätzlich: `firstname`, `lastname`, `street`, `postal`, `city`, `email` und `privacy: true`.
+    - Alternativ können die Gastdaten in einem Objekt `student` übertragen werden.
 
 ### Kursanmeldungen
 
