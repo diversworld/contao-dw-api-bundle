@@ -315,6 +315,11 @@ class CourseController
             $errors['city'] = 'City is required';
         }
 
+        $dateOfBirth = $this->normalizeDateOfBirth($studentData['dateOfBirth'] ?? $studentData['birthdate'] ?? '');
+        if ($dateOfBirth === '' || (int)$dateOfBirth > time()) {
+            $errors['dateOfBirth'] = 'A valid date of birth is required';
+        }
+
         $email = $this->getPayloadString($studentData, 'email');
         if ($email === '' || false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'A valid email address is required';
