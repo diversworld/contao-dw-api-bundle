@@ -82,8 +82,9 @@ Alle Endpunkte befinden sich unter dem Präfix `/api`.
 
 ### Kurse
 
-- `GET /api/courses`: Liste aller verfügbaren Kurse.
-- `GET /api/courses/{id}`: Details zu einem bestimmten Kurs.
+- `GET /api/courses`: Liste der veröffentlichten Kursveranstaltungen aus `tl_dc_course_event`; ein leeres `dateEnd` gilt
+  als laufender Kurs.
+- `GET /api/courses/{id}`: Details zu einer Kursveranstaltung aus `tl_dc_course_event`.
 - `POST /api/courses/enroll`: Anmeldung zu einem Kurs.
     - Erwartet JSON mit `course_id` und optional `event_id`.
 

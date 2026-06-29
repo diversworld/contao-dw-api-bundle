@@ -17,12 +17,12 @@ namespace Diversworld\ContaoDwApiBundle\Tests\ContaoManager;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\DelegatingParser;
-use Contao\TestCase\ContaoTestCase;
 use Diversworld\ContaoDiveclubBundle\DiversworldContaoDiveclubBundle;
 use Diversworld\ContaoDwApiBundle\ContaoManager\Plugin;
 use Diversworld\ContaoDwApiBundle\DiversworldContaoDwApiBundle;
+use PHPUnit\Framework\TestCase;
 
-class PluginTest extends ContaoTestCase
+class PluginTest extends TestCase
 {
     /**
      * Test Contao manager plugin class instantiation.
